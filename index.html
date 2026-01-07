@@ -362,10 +362,9 @@
 <div class="notification" id="notification">Товар добавлен!</div>
 
 <script>
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyWcRyTktyTNw6VNnFy2pFThF-uOMCIDM1RuXR5AARJn-Ba2truNqe-5bO7kZD4bk8n/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbznVHc-ifgUd2CGUZulFnkHkU0QDoABbgGiXoSpI_AP1ljt1CG6QasWEzO4cafzo7C9/exec';
 
   let products = [];
-  let categories = [];
   let currentCategory = '';
   let currentSubcategory = null;
   let cart = JSON.parse(localStorage.getItem('cart')) || [];
@@ -384,39 +383,62 @@
   async function fetchProducts() {
     try {
       const response = await fetch(APPS_SCRIPT_URL + '?_=' + Date.now());
-      const data = await response.json();
-      products = data.products || [];
-      categories = data.categories || [];
+      const text = await response.text();
+      // Убираем возможные HTML-ошибки или предупреждения
+      if (text.includes('<!DOCTYPE') || text.includes('TypeError')) {
+        throw new Error('Ошибка в Apps Script');
+      }
+      const data = JSON.parse(text);
+
+      if (Array.isArray(data)) {
+        products = data;
+      } else {
+        products = data.products || [];
+      }
       return true;
     } catch (e) {
       console.error('Ошибка загрузки:', e);
-      productsEl.innerHTML = '<div class="error">Не удалось загрузить товары. Проверьте таблицу и развертывание.</div>';
+      productsEl.innerHTML = '<div class="error">Не удалось загрузить товары. Проверьте Google Таблицу и Apps Script.</div>';
       return false;
     }
   }
 
   function renderTabs() {
+    // Собираем уникальные категории по category_name
+    const categoryMap = new Map();
+    products.forEach(p => {
+      if (p.category && p.category_name) {
+        categoryMap.set(p.category, p.category_name);
+      }
+    });
+
     tabsEl.innerHTML = '';
-    categories.forEach(cat => {
+    let isFirst = true;
+    categoryMap.forEach((name, id) => {
       const tab = document.createElement('div');
       tab.className = 'tab';
-      tab.textContent = cat.name;
-      tab.dataset.category = cat.id;
+      tab.textContent = name;
+      tab.dataset.category = id;
       tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
-        currentCategory = cat.id;
+        currentCategory = id;
         renderSubcategories();
         renderProducts();
       });
+      if (isFirst) {
+        tab.classList.add('active');
+        currentCategory = id;
+        isFirst = false;
+      }
       tabsEl.appendChild(tab);
     });
 
-    if (categories.length > 0) {
-      currentCategory = categories[0].id;
-      document.querySelector('.tab').classList.add('active');
+    if (categoryMap.size > 0 && isFirst === false) {
       renderSubcategories();
       renderProducts();
+    } else {
+      productsEl.innerHTML = '<div class="error">Нет категорий в таблице</div>';
     }
   }
 
@@ -602,25 +624,18 @@
     });
     message += `\nИтого: ${cart.reduce((sum, item) => sum + getPrice(item), 0)} ₽`;
 
-    // Отправляем сообщение админу через Telegram Bot API
     const botToken = '8385164830:AAFg-G2MVV5sR4OrtOosil60docftF86NDQ';
     const adminId = '660436506';
 
     try {
-      const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-      const res = await fetch(url, {
+      const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: adminId,
-          text: message,
-          parse_mode: 'HTML'
-        })
+        body: JSON.stringify({ chat_id: adminId, text: message })
       });
 
-      const result = await res.json();
-      if (result.ok) {
-        alert('Заказ успешно отправлен администратору!');
+      if (res.ok) {
+        alert('Заказ отправлен! Проверьте Telegram.');
         cart = [];
         saveCart();
         updateCartView();
@@ -628,10 +643,10 @@
         sdekInput.value = '';
         cartPanel.style.display = 'none';
       } else {
-        throw new Error('API error: ' + result.description);
+        throw new Error('Ошибка Telegram API');
       }
     } catch (e) {
-      alert('Ошибка отправки заказа: ' + e.message);
+      alert('Не удалось отправить заказ. Проверьте интернет.');
       console.error(e);
     }
   });
@@ -651,13 +666,15 @@
     }
   })();
 
+  // Закрытие корзины
   document.addEventListener('click', (e) => {
     if (!cartPanel.contains(e.target) && e.target !== cartBtn) {
       cartPanel.style.display = 'none';
     }
   });
 
-  if (window.Telegram && window.Telegram.WebApp) {
+  // Поддержка Telegram WebApp
+  if (window.Telegram?.WebApp) {
     Telegram.WebApp.ready();
     Telegram.WebApp.expand();
   }
