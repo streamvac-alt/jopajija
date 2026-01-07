@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>YodaShop — Оптовый вейпшоп</title>
+    <title>TestShop — Оптовый вейпшоп</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -252,7 +252,7 @@
 <body>
 
 <header>
-    <div class="logo">YodaShop</div>
+    <div class="logo">TestShop</div>
     <div>Оптовый вейпшоп — от 1 шт!</div>
 </header>
 
@@ -286,21 +286,10 @@
 <div class="notification" id="notification">Товар добавлен в корзину!</div>
 
 <script>
-    // Пример данных (в реальности будет загружаться из Google Таблицы через API)
-    const mockData = [
-        // Жидкости
-        { id: 1, name: 'HQD Cuvie Mango', category: 'liquids', subcategory: 'HQD', img: 'https://via.placeholder.com/150?text=HQD+Mango', price1: 120, price5: 110, price10: 100, stock: true },
-        { id: 2, name: 'Elf Bar Blue Razz', category: 'liquids', subcategory: 'Elf Bar', img: 'https://via.placeholder.com/150?text=Elf+Blue', price1: 130, price5: 120, price10: 110, stock: true },
-        { id: 3, name: 'Nasty Juice Mango', category: 'liquids', subcategory: 'Nasty Juice', img: 'https://via.placeholder.com/150?text=Nasty', price1: 150, price5: 140, price10: 130, stock: true },
-        // Испарители
-        { id: 4, name: 'SMOK Nord Coil', category: 'coils', subcategory: '', img: 'https://via.placeholder.com/150?text=SMOK+Coil', price1: 200, price5: 180, price10: 160, stock: true },
-        // Под-системы
-        { id: 5, name: 'Uwell Caliburn G2', category: 'pods', subcategory: '', img: 'https://via.placeholder.com/150?text=Caliburn', price1: 1200, price5: 1100, price10: 1000, stock: true },
-        // Одноразки
-        { id: 6, name: 'HQD Cuvie Plus', category: 'disposables', subcategory: '', img: 'https://via.placeholder.com/150?text=Cuvie+', price1: 250, price5: 230, price10: 210, stock: true },
-    ];
+    // Загрузка данных из Google Apps Script
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyWcRyTktyTNw6VNnFy2pFThF-uOMCIDM1RuXR5AARJn-Ba2truNqe-5bO7kZD4bk8n/exec';
 
-    // Глобальные переменные
+    let products = [];
     let currentCategory = 'liquids';
     let currentSubcategory = null;
     let cart = JSON.parse(localStorage.getItem('cart')) || [];
@@ -317,10 +306,24 @@
     const sdekInput = document.getElementById('sdekAddress');
     const notification = document.getElementById('notification');
 
-    // Фильтрация и отображение товаров
+    // Функция загрузки товаров
+    async function fetchProducts() {
+        try {
+            const response = await fetch(APPS_SCRIPT_URL);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+            return data.products || [];
+        } catch (e) {
+            console.error('Ошибка загрузки товаров:', e);
+            productsEl.innerHTML = '<p style="grid-column:1/-1; text-align:center; padding:40px; color:#e74c3c;">Ошибка загрузки товаров. Проверьте подключение к таблице.</p>';
+            return [];
+        }
+    }
+
+    // Отображение товаров
     function renderProducts() {
         productsEl.innerHTML = '';
-        const filtered = mockData.filter(item => {
+        const filtered = products.filter(item => {
             if (item.category !== currentCategory) return false;
             if (currentCategory === 'liquids' && currentSubcategory && item.subcategory !== currentSubcategory) return false;
             return true;
@@ -335,7 +338,7 @@
             const card = document.createElement('div');
             card.className = 'product-card';
             card.innerHTML = `
-                <img src="${item.img}" alt="${item.name}" class="product-img">
+                <img src="${item.img || 'https://via.placeholder.com/150?text=No+Image'}" alt="${item.name}" class="product-img">
                 <div class="product-info">
                     <div class="product-name">${item.name}</div>
                     <div class="price-tier">от 1 шт: ${item.price1} ₽</div>
@@ -347,7 +350,6 @@
             productsEl.appendChild(card);
         });
 
-        // Назначаем обработчики
         document.querySelectorAll('.add-to-cart').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id = parseInt(btn.dataset.id);
@@ -357,7 +359,7 @@
         });
     }
 
-    // Рендер субкатегорий для жидкостей
+    // Рендер субкатегорий (только для жидкостей)
     function renderSubcategories() {
         if (currentCategory !== 'liquids') {
             subcategoriesEl.style.display = 'none';
@@ -365,10 +367,11 @@
             return;
         }
 
-        const brands = [...new Set(mockData
-            .filter(item => item.category === 'liquids')
-            .map(item => item.subcategory)
-        )].filter(Boolean);
+        const brands = [...new Set(
+            products
+                .filter(item => item.category === 'liquids' && item.subcategory)
+                .map(item => item.subcategory)
+        )];
 
         subcategoriesEl.innerHTML = '';
         const allBtn = document.createElement('div');
@@ -411,7 +414,7 @@
 
     // Корзина
     function addToCart(productId) {
-        const item = mockData.find(p => p.id === productId);
+        const item = products.find(p => p.id === productId);
         if (!item) return;
 
         const existing = cart.find(i => i.id === productId);
@@ -453,9 +456,11 @@
             btn.addEventListener('click', () => {
                 const id = parseInt(btn.dataset.id);
                 const item = cart.find(i => i.id === id);
-                if (item) item.qty += 1;
-                saveCart();
-                updateCartView();
+                if (item) {
+                    item.qty += 1;
+                    saveCart();
+                    updateCartView();
+                }
             });
         });
 
@@ -515,10 +520,8 @@
         });
         message += `%0AИтого: ${cart.reduce((sum, item) => sum + getPrice(item), 0)} ₽`;
 
-        // Открываем Telegram с заполненным сообщением
         window.open(`https://t.me/YodaShopSupportBot?start=${encodeURIComponent(message)}`, '_blank');
 
-        // Очищаем корзину
         cart = [];
         saveCart();
         updateCartView();
@@ -536,11 +539,14 @@
     }
 
     // Инициализация
-    renderSubcategories();
-    renderProducts();
-    updateCartView();
+    (async () => {
+        products = await fetchProducts();
+        renderSubcategories();
+        renderProducts();
+        updateCartView();
+    })();
 
-    // Закрытие панели корзины при клике вне её
+    // Закрытие панели корзины при клике вне
     document.addEventListener('click', (e) => {
         if (!cartPanel.contains(e.target) && e.target !== cartBtn) {
             cartPanel.style.display = 'none';
@@ -550,4 +556,3 @@
 
 </body>
 </html>
-
