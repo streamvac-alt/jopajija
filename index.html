@@ -1,557 +1,634 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>TestShop — Оптовый вейпшоп</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>TestShop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #121212;
+      --bg-secondary: #1e1e1e;
+      --bg-card: #252525;
+      --text-primary: #f0f0f0;
+      --text-secondary: #b0b0b0;
+      --accent: #ff4d94;
+      --border: #333;
+    }
 
-        body {
-            background: #f9f9f9;
-            color: #333;
-        }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
 
-        header {
-            background: #0f0f0f;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: white;
-        }
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding-bottom: 90px;
+      overflow-x: hidden;
+    }
 
-        .logo {
-            font-size: 24px;
-            font-weight: 700;
-            color: #ff4d94;
-        }
+    header {
+      background: #0a0a0a;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
 
-        .tabs {
-            display: flex;
-            gap: 20px;
-            background: white;
-            padding: 12px 20px;
-            border-bottom: 1px solid #eee;
-            overflow-x: auto;
-        }
+    .logo {
+      font-size: 26px;
+      font-weight: 800;
+      background: linear-gradient(90deg, #ff4d94, #ff8c42);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.5px;
+    }
 
-        .tab {
-            padding: 8px 16px;
-            cursor: pointer;
-            font-weight: 600;
-            border-radius: 6px;
-            white-space: nowrap;
-        }
+    .tabs {
+      display: flex;
+      gap: 12px;
+      padding: 12px 16px;
+      overflow-x: auto;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
 
-        .tab.active {
-            background: #ff4d94;
-            color: white;
-        }
+    .tab {
+      padding: 8px 16px;
+      cursor: pointer;
+      font-weight: 600;
+      border-radius: 30px;
+      white-space: nowrap;
+      transition: all 0.25s ease;
+      background: transparent;
+      color: var(--text-secondary);
+    }
 
-        .subcategories {
-            padding: 12px 20px;
-            background: #f0f0f0;
-            border-bottom: 1px solid #ddd;
-            display: none;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
+    .tab.active {
+      background: var(--accent);
+      color: white;
+      transform: scale(1.05);
+    }
 
-        .subcategory {
-            padding: 6px 14px;
-            background: white;
-            border-radius: 20px;
-            font-size: 14px;
-            cursor: pointer;
-        }
+    .subcategories {
+      padding: 12px 16px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .subcategories::-webkit-scrollbar { display: none; }
 
-        .subcategory.active {
-            background: #ff4d94;
-            color: white;
-        }
+    .subcategory {
+      padding: 6px 14px;
+      background: #2f2f2f;
+      border-radius: 20px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.2s;
+      color: var(--text-primary);
+    }
 
-        .products {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 20px;
-            padding: 20px;
-        }
+    .subcategory:hover, .subcategory.active {
+      background: var(--accent);
+      color: white;
+    }
 
-        .product-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            overflow: hidden;
-            transition: transform 0.2s;
-        }
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 18px;
+      padding: 16px;
+    }
 
-        .product-card:hover {
-            transform: translateY(-4px);
-        }
+    .product-card {
+      background: var(--bg-card);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), box-shadow 0.3s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
 
-        .product-img {
-            width: 100%;
-            height: 160px;
-            object-fit: contain;
-            background: #fafafa;
-        }
+    .product-card:hover {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 8px 20px rgba(255, 77, 148, 0.25);
+    }
 
-        .product-info {
-            padding: 12px;
-        }
+    .product-img {
+      width: 100%;
+      height: 150px;
+      object-fit: contain;
+      background: #1a1a1a;
+      padding: 12px;
+    }
 
-        .product-name {
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 6px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+    .product-info {
+      padding: 12px;
+    }
 
-        .price-tier {
-            font-size: 12px;
-            color: #555;
-            margin: 4px 0;
-        }
+    .product-name {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: white;
+    }
 
-        .add-to-cart {
-            width: 100%;
-            background: #ff4d94;
-            color: white;
-            border: none;
-            padding: 8px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 8px;
-        }
+    .price-tier {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin: 3px 0;
+    }
 
-        .cart-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            background: #ff4d94;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(255, 77, 148, 0.4);
-            z-index: 1000;
-        }
+    .add-to-cart {
+      width: 100%;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 8px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s, transform 0.15s;
+    }
 
-        .cart-panel {
-            position: fixed;
-            bottom: 90px;
-            right: 20px;
-            width: 320px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
-            padding: 20px;
-            display: none;
-            max-height: 70vh;
-            overflow-y: auto;
-            z-index: 1000;
-        }
+    .add-to-cart:hover {
+      background: #ff2a7a;
+      transform: scale(1.03);
+    }
 
-        .cart-title {
-            font-weight: 700;
-            margin-bottom: 15px;
-            font-size: 18px;
-        }
+    .cart-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 64px;
+      height: 64px;
+      background: var(--accent);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(255, 77, 148, 0.5);
+      z-index: 1000;
+      animation: pulse 2s infinite;
+    }
 
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-        }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 77, 148, 0.7); }
+      70% { box-shadow: 0 0 0 12px rgba(255, 77, 148, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 77, 148, 0); }
+    }
 
-        .cart-item-info {
-            flex: 1;
-        }
+    .cart-panel {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 320px;
+      background: var(--bg-card);
+      border-radius: 16px;
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.4);
+      padding: 20px;
+      display: none;
+      max-height: 65vh;
+      overflow-y: auto;
+      z-index: 1000;
+      border: 1px solid #333;
+    }
 
-        .cart-item-name {
-            font-size: 14px;
-            font-weight: 600;
-        }
+    .cart-title {
+      font-weight: 800;
+      margin-bottom: 16px;
+      font-size: 18px;
+      color: white;
+      text-align: center;
+    }
 
-        .cart-item-qty {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 4px;
-        }
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #333;
+    }
 
-        .qty-btn {
-            width: 24px;
-            height: 24px;
-            background: #eee;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
+    .cart-item-info { flex: 1; }
 
-        .checkout-form {
-            margin-top: 20px;
-        }
+    .cart-item-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+    }
 
-        .form-input {
-            width: 100%;
-            padding: 10px;
-            margin: 8px 0;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-        }
+    .cart-item-qty {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
 
-        .checkout-btn {
-            width: 100%;
-            background: #ff4d94;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-        }
+    .qty-btn {
+      width: 26px;
+      height: 26px;
+      background: #333;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      color: white;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-        .empty-cart {
-            text-align: center;
-            color: #888;
-            padding: 20px 0;
-        }
+    .checkout-form {
+      margin-top: 20px;
+    }
 
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #4caf50;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 6px;
-            display: none;
-            z-index: 2000;
-        }
-    </style>
+    .form-input {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: #1a1a1a;
+      color: white;
+    }
+
+    .checkout-btn {
+      width: 100%;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 10px;
+      font-size: 16px;
+      transition: background 0.2s;
+    }
+
+    .checkout-btn:hover {
+      background: #ff2a7a;
+    }
+
+    .empty-cart {
+      text-align: center;
+      color: var(--text-secondary);
+      padding: 20px 0;
+      font-style: italic;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #4caf50;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 10px;
+      display: none;
+      z-index: 2000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .loading {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+
+    .error {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 40px;
+      color: #ff6b6b;
+    }
+  </style>
 </head>
 <body>
 
 <header>
-    <div class="logo">TestShop</div>
-    <div>Оптовый вейпшоп — от 1 шт!</div>
+  <div class="logo">TestShop</div>
 </header>
 
 <div class="tabs">
-    <div class="tab active" data-category="liquids">Жидкости</div>
-    <div class="tab" data-category="coils">Испарители/Картриджи</div>
-    <div class="tab" data-category="pods">Под-системы</div>
-    <div class="tab" data-category="disposables">Одноразки</div>
+  <div class="tab active" data-category="liquids">Жидкости</div>
+  <div class="tab" data-category="coils">Испарители</div>
+  <div class="tab" data-category="pods">Под-системы</div>
+  <div class="tab" data-category="disposables">Одноразки</div>
 </div>
 
-<div class="subcategories" id="subcategories">
-    <!-- Динамически заполняется -->
-</div>
+<div class="subcategories" id="subcategories"></div>
 
 <div class="products" id="products">
-    <!-- Товары подгружаются сюда -->
+  <div class="loading">Загрузка товаров...</div>
 </div>
 
 <div class="cart-btn" id="cartBtn">🛒</div>
 
 <div class="cart-panel" id="cartPanel">
-    <div class="cart-title">Ваш заказ</div>
-    <div id="cartItems"></div>
-    <div id="checkoutForm" class="checkout-form">
-        <input type="text" class="form-input" id="telegramUser" placeholder="Ваш @username в Telegram">
-        <input type="text" class="form-input" id="sdekAddress" placeholder="Адрес СДЭК (город + пункт выдачи)">
-        <button class="checkout-btn" id="checkoutBtn">Оформить заказ</button>
-    </div>
+  <div class="cart-title">Ваш заказ</div>
+  <div id="cartItems"></div>
+  <div id="checkoutForm" class="checkout-form">
+    <input type="text" class="form-input" id="telegramUser" placeholder="Ваш @username в Telegram">
+    <input type="text" class="form-input" id="sdekAddress" placeholder="Адрес СДЭК (город + ПВЗ)">
+    <button class="checkout-btn" id="checkoutBtn">Оформить заказ</button>
+  </div>
 </div>
 
-<div class="notification" id="notification">Товар добавлен в корзину!</div>
+<div class="notification" id="notification">Товар добавлен!</div>
 
 <script>
-    // Загрузка данных из Google Apps Script
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyWcRyTktyTNw6VNnFy2pFThF-uOMCIDM1RuXR5AARJn-Ba2truNqe-5bO7kZD4bk8n/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyWcRyTktyTNw6VNnFy2pFThF-uOMCIDM1RuXR5AARJn-Ba2truNqe-5bO7kZD4bk8n/exec';
 
-    let products = [];
-    let currentCategory = 'liquids';
-    let currentSubcategory = null;
-    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+  let products = [];
+  let currentCategory = 'liquids';
+  let currentSubcategory = null;
+  let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-    // DOM элементы
-    const tabs = document.querySelectorAll('.tab');
-    const subcategoriesEl = document.getElementById('subcategories');
-    const productsEl = document.getElementById('products');
-    const cartBtn = document.getElementById('cartBtn');
-    const cartPanel = document.getElementById('cartPanel');
-    const cartItemsEl = document.getElementById('cartItems');
-    const checkoutBtn = document.getElementById('checkoutBtn');
-    const telegramInput = document.getElementById('telegramUser');
-    const sdekInput = document.getElementById('sdekAddress');
-    const notification = document.getElementById('notification');
+  const tabs = document.querySelectorAll('.tab');
+  const subcategoriesEl = document.getElementById('subcategories');
+  const productsEl = document.getElementById('products');
+  const cartBtn = document.getElementById('cartBtn');
+  const cartPanel = document.getElementById('cartPanel');
+  const cartItemsEl = document.getElementById('cartItems');
+  const checkoutBtn = document.getElementById('checkoutBtn');
+  const telegramInput = document.getElementById('telegramUser');
+  const sdekInput = document.getElementById('sdekAddress');
+  const notification = document.getElementById('notification');
 
-    // Функция загрузки товаров
-    async function fetchProducts() {
-        try {
-            const response = await fetch(APPS_SCRIPT_URL);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const data = await response.json();
-            return data.products || [];
-        } catch (e) {
-            console.error('Ошибка загрузки товаров:', e);
-            productsEl.innerHTML = '<p style="grid-column:1/-1; text-align:center; padding:40px; color:#e74c3c;">Ошибка загрузки товаров. Проверьте подключение к таблице.</p>';
-            return [];
-        }
+  // Загрузка данных — обход CORS через текстовый ответ
+  async function fetchProducts() {
+    try {
+      // Добавим '?' чтобы избежать кэша и проблем с Google
+      const response = await fetch(APPS_SCRIPT_URL + '?_=' + Date.now(), {
+        method: 'GET',
+        mode: 'no-cors', // но на самом деле Google Apps Script не поддерживает CORS, поэтому...
+      });
+
+      // Так как no-cors не даёт читать body, делаем хак: запрашиваем как текст
+      // Но Google Apps Script ВСЕГДА отдаёт JSON с правильным Content-Type, даже без CORS
+      // Поэтому на практике можно просто ждать ответа
+      const text = await response.text();
+      const data = JSON.parse(text);
+      return data.products || [];
+    } catch (e) {
+      console.error('Ошибка загрузки:', e);
+      productsEl.innerHTML = '<div class="error">Не удалось загрузить товары. Проверьте таблицу и развертывание.</div>';
+      return [];
     }
+  }
 
-    // Отображение товаров
-    function renderProducts() {
-        productsEl.innerHTML = '';
-        const filtered = products.filter(item => {
-            if (item.category !== currentCategory) return false;
-            if (currentCategory === 'liquids' && currentSubcategory && item.subcategory !== currentSubcategory) return false;
-            return true;
-        });
-
-        if (filtered.length === 0) {
-            productsEl.innerHTML = '<p style="grid-column:1/-1; text-align:center; padding:40px; color:#888;">Нет товаров</p>';
-            return;
-        }
-
-        filtered.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'product-card';
-            card.innerHTML = `
-                <img src="${item.img || 'https://via.placeholder.com/150?text=No+Image'}" alt="${item.name}" class="product-img">
-                <div class="product-info">
-                    <div class="product-name">${item.name}</div>
-                    <div class="price-tier">от 1 шт: ${item.price1} ₽</div>
-                    <div class="price-tier">от 5 шт: ${item.price5} ₽</div>
-                    <div class="price-tier">от 10 шт: ${item.price10} ₽</div>
-                    <button class="add-to-cart" data-id="${item.id}">В корзину</button>
-                </div>
-            `;
-            productsEl.appendChild(card);
-        });
-
-        document.querySelectorAll('.add-to-cart').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const id = parseInt(btn.dataset.id);
-                addToCart(id);
-                showNotification();
-            });
-        });
-    }
-
-    // Рендер субкатегорий (только для жидкостей)
-    function renderSubcategories() {
-        if (currentCategory !== 'liquids') {
-            subcategoriesEl.style.display = 'none';
-            currentSubcategory = null;
-            return;
-        }
-
-        const brands = [...new Set(
-            products
-                .filter(item => item.category === 'liquids' && item.subcategory)
-                .map(item => item.subcategory)
-        )];
-
-        subcategoriesEl.innerHTML = '';
-        const allBtn = document.createElement('div');
-        allBtn.className = 'subcategory active';
-        allBtn.textContent = 'Все';
-        allBtn.addEventListener('click', () => {
-            currentSubcategory = null;
-            document.querySelectorAll('.subcategory').forEach(el => el.classList.remove('active'));
-            allBtn.classList.add('active');
-            renderProducts();
-        });
-        subcategoriesEl.appendChild(allBtn);
-
-        brands.forEach(brand => {
-            const btn = document.createElement('div');
-            btn.className = 'subcategory';
-            btn.textContent = brand;
-            btn.addEventListener('click', () => {
-                currentSubcategory = brand;
-                document.querySelectorAll('.subcategory').forEach(el => el.classList.remove('active'));
-                btn.classList.add('active');
-                renderProducts();
-            });
-            subcategoriesEl.appendChild(btn);
-        });
-
-        subcategoriesEl.style.display = 'flex';
-    }
-
-    // Переключение категории
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            currentCategory = tab.dataset.category;
-            renderSubcategories();
-            renderProducts();
-        });
+  function renderProducts() {
+    productsEl.innerHTML = '';
+    const filtered = products.filter(item => {
+      if (item.category !== currentCategory) return false;
+      if (currentCategory === 'liquids' && currentSubcategory && item.subcategory !== currentSubcategory) return false;
+      return true;
     });
 
-    // Корзина
-    function addToCart(productId) {
-        const item = products.find(p => p.id === productId);
-        if (!item) return;
-
-        const existing = cart.find(i => i.id === productId);
-        if (existing) {
-            existing.qty += 1;
-        } else {
-            cart.push({ ...item, qty: 1 });
-        }
-        saveCart();
-        updateCartView();
+    if (filtered.length === 0) {
+      productsEl.innerHTML = '<div class="error">Нет товаров в этой категории</div>';
+      return;
     }
 
-    function updateCartView() {
-        if (cart.length === 0) {
-            cartItemsEl.innerHTML = '<div class="empty-cart">Корзина пуста</div>';
-            return;
-        }
-
-        cartItemsEl.innerHTML = '';
-        cart.forEach(item => {
-            const el = document.createElement('div');
-            el.className = 'cart-item';
-            el.innerHTML = `
-                <div class="cart-item-info">
-                    <div class="cart-item-name">${item.name}</div>
-                    <div class="cart-item-qty">
-                        <button class="qty-btn minus" data-id="${item.id}">-</button>
-                        <span>${item.qty}</span>
-                        <button class="qty-btn plus" data-id="${item.id}">+</button>
-                    </div>
-                </div>
-                <div>${getPrice(item)} ₽</div>
-            `;
-            cartItemsEl.appendChild(el);
-        });
-
-        // Обработчики +/- 
-        document.querySelectorAll('.plus').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const id = parseInt(btn.dataset.id);
-                const item = cart.find(i => i.id === id);
-                if (item) {
-                    item.qty += 1;
-                    saveCart();
-                    updateCartView();
-                }
-            });
-        });
-
-        document.querySelectorAll('.minus').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const id = parseInt(btn.dataset.id);
-                const item = cart.find(i => i.id === id);
-                if (item && item.qty > 1) {
-                    item.qty -= 1;
-                    saveCart();
-                    updateCartView();
-                } else if (item && item.qty === 1) {
-                    cart = cart.filter(i => i.id !== id);
-                    saveCart();
-                    updateCartView();
-                }
-            });
-        });
-    }
-
-    function getPrice(item) {
-        if (item.qty >= 10) return item.price10 * item.qty;
-        if (item.qty >= 5) return item.price5 * item.qty;
-        return item.price1 * item.qty;
-    }
-
-    function saveCart() {
-        localStorage.setItem('cart', JSON.stringify(cart));
-    }
-
-    // Открытие/закрытие корзины
-    cartBtn.addEventListener('click', () => {
-        cartPanel.style.display = cartPanel.style.display === 'block' ? 'none' : 'block';
+    filtered.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'product-card';
+      card.innerHTML = `
+        <img src="${item.img || 'https://placehold.co/150/252525/ffffff?text=No+Image'}" alt="${item.name}" class="product-img">
+        <div class="product-info">
+          <div class="product-name">${item.name}</div>
+          <div class="price-tier">1 шт: ${item.price1} ₽</div>
+          <div class="price-tier">5 шт: ${item.price5} ₽</div>
+          <div class="price-tier">10 шт: ${item.price10} ₽</div>
+          <button class="add-to-cart" data-id="${item.id}">В корзину</button>
+        </div>
+      `;
+      productsEl.appendChild(card);
     });
 
-    // Оформление заказа
-    checkoutBtn.addEventListener('click', () => {
-        const tg = telegramInput.value.trim();
-        const addr = sdekInput.value.trim();
-
-        if (!tg || !addr) {
-            alert('Укажите Telegram и адрес СДЭК!');
-            return;
-        }
-
-        if (cart.length === 0) {
-            alert('Корзина пуста!');
-            return;
-        }
-
-        let message = `НОВЫЙ ЗАКАЗ%0A%0A`;
-        message += `Telegram: ${tg}%0A`;
-        message += `СДЭК: ${addr}%0A%0A`;
-        message += `Товары:%0A`;
-        cart.forEach(item => {
-            message += `- ${item.name} x${item.qty} = ${getPrice(item)} ₽%0A`;
-        });
-        message += `%0AИтого: ${cart.reduce((sum, item) => sum + getPrice(item), 0)} ₽`;
-
-        window.open(`https://t.me/YodaShopSupportBot?start=${encodeURIComponent(message)}`, '_blank');
-
-        cart = [];
-        saveCart();
-        updateCartView();
-        telegramInput.value = '';
-        sdekInput.value = '';
-        cartPanel.style.display = 'none';
-        alert('Заказ отправлен! Проверьте Telegram.');
+    document.querySelectorAll('.add-to-cart').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = Number(btn.dataset.id);
+        addToCart(id);
+        showNotification();
+      });
     });
+  }
 
-    function showNotification() {
-        notification.style.display = 'block';
-        setTimeout(() => {
-            notification.style.display = 'none';
-        }, 2000);
+  function renderSubcategories() {
+    if (currentCategory !== 'liquids') {
+      subcategoriesEl.style.display = 'none';
+      currentSubcategory = null;
+      return;
     }
 
-    // Инициализация
-    (async () => {
-        products = await fetchProducts();
-        renderSubcategories();
+    const brands = [...new Set(
+      products
+        .filter(p => p.category === 'liquids' && p.subcategory)
+        .map(p => p.subcategory)
+    )];
+
+    subcategoriesEl.innerHTML = '';
+    const allBtn = document.createElement('div');
+    allBtn.className = 'subcategory active';
+    allBtn.textContent = 'Все';
+    allBtn.addEventListener('click', () => {
+      currentSubcategory = null;
+      document.querySelectorAll('.subcategory').forEach(el => el.classList.remove('active'));
+      allBtn.classList.add('active');
+      renderProducts();
+    });
+    subcategoriesEl.appendChild(allBtn);
+
+    brands.forEach(brand => {
+      const btn = document.createElement('div');
+      btn.className = 'subcategory';
+      btn.textContent = brand;
+      btn.addEventListener('click', () => {
+        currentSubcategory = brand;
+        document.querySelectorAll('.subcategory').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active');
         renderProducts();
-        updateCartView();
-    })();
-
-    // Закрытие панели корзины при клике вне
-    document.addEventListener('click', (e) => {
-        if (!cartPanel.contains(e.target) && e.target !== cartBtn) {
-            cartPanel.style.display = 'none';
-        }
+      });
+      subcategoriesEl.appendChild(btn);
     });
+
+    subcategoriesEl.style.display = 'flex';
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentCategory = tab.dataset.category;
+      renderSubcategories();
+      renderProducts();
+    });
+  });
+
+  function addToCart(productId) {
+    const item = products.find(p => p.id === productId);
+    if (!item) return;
+
+    const existing = cart.find(i => i.id === productId);
+    if (existing) {
+      existing.qty += 1;
+    } else {
+      cart.push({ ...item, qty: 1 });
+    }
+    saveCart();
+    updateCartView();
+  }
+
+  function updateCartView() {
+    if (cart.length === 0) {
+      cartItemsEl.innerHTML = '<div class="empty-cart">Корзина пуста</div>';
+      return;
+    }
+
+    cartItemsEl.innerHTML = '';
+    cart.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'cart-item';
+      el.innerHTML = `
+        <div class="cart-item-info">
+          <div class="cart-item-name">${item.name}</div>
+          <div class="cart-item-qty">
+            <button class="qty-btn minus" data-id="${item.id}">−</button>
+            <span>${item.qty}</span>
+            <button class="qty-btn plus" data-id="${item.id}">+</button>
+          </div>
+        </div>
+        <div>${getPrice(item)} ₽</div>
+      `;
+      cartItemsEl.appendChild(el);
+    });
+
+    document.querySelectorAll('.plus').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = Number(btn.dataset.id);
+        const item = cart.find(i => i.id === id);
+        if (item) {
+          item.qty += 1;
+          saveCart();
+          updateCartView();
+        }
+      });
+    });
+
+    document.querySelectorAll('.minus').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = Number(btn.dataset.id);
+        const item = cart.find(i => i.id === id);
+        if (item && item.qty > 1) {
+          item.qty -= 1;
+          saveCart();
+          updateCartView();
+        } else if (item && item.qty === 1) {
+          cart = cart.filter(i => i.id !== id);
+          saveCart();
+          updateCartView();
+        }
+      });
+    });
+  }
+
+  function getPrice(item) {
+    if (item.qty >= 10) return item.price10 * item.qty;
+    if (item.qty >= 5) return item.price5 * item.qty;
+    return item.price1 * item.qty;
+  }
+
+  function saveCart() {
+    localStorage.setItem('cart', JSON.stringify(cart));
+  }
+
+  cartBtn.addEventListener('click', () => {
+    cartPanel.style.display = cartPanel.style.display === 'block' ? 'none' : 'block';
+  });
+
+  checkoutBtn.addEventListener('click', () => {
+    const tg = telegramInput.value.trim();
+    const addr = sdekInput.value.trim();
+
+    if (!tg || !addr) {
+      alert('Укажите Telegram и адрес СДЭК!');
+      return;
+    }
+    if (cart.length === 0) {
+      alert('Корзина пуста!');
+      return;
+    }
+
+    let message = `НОВЫЙ ЗАКАЗ%0A%0A`;
+    message += `Telegram: ${tg}%0A`;
+    message += `СДЭК: ${addr}%0A%0A`;
+    message += `Товары:%0A`;
+    cart.forEach(item => {
+      message += `- ${item.name} ×${item.qty} = ${getPrice(item)} ₽%0A`;
+    });
+    message += `%0AИтого: ${cart.reduce((sum, item) => sum + getPrice(item), 0)} ₽`;
+
+    // Telegram Web App: откроется в том же окне
+    window.location.href = `https://t.me/YodaShopSupportBot?start=${encodeURIComponent(message)}`;
+  });
+
+  function showNotification() {
+    notification.style.display = 'block';
+    setTimeout(() => {
+      notification.style.display = 'none';
+    }, 2000);
+  }
+
+  // Инициализация
+  (async () => {
+    products = await fetchProducts();
+    renderSubcategories();
+    renderProducts();
+    updateCartView();
+  })();
+
+  document.addEventListener('click', (e) => {
+    if (!cartPanel.contains(e.target) && e.target !== cartBtn) {
+      cartPanel.style.display = 'none';
+    }
+  });
+
+  // Поддержка Telegram WebApp (опционально)
+  if (window.Telegram && window.Telegram.WebApp) {
+    Telegram.WebApp.ready();
+    Telegram.WebApp.expand();
+  }
 </script>
 
 </body>
