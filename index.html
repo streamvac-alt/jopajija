@@ -427,7 +427,13 @@
     try {
       const response = await fetch(APPS_SCRIPT_URL + '?_=' + Date.now());
       const data = await response.json();
-      products = Array.isArray(data) ? data : (data.products || []);
+
+      if (Array.isArray(data)) {
+        products = data;
+      } else {
+        products = data.products || [];
+      }
+
       return true;
     } catch (e) {
       console.error('Ошибка загрузки:', e);
@@ -437,36 +443,31 @@
   }
 
   function renderTabs() {
-    const categoryMap = new Map();
-    products.forEach(p => {
-      if (p.category && p.category_name) {
-        categoryMap.set(p.category, p.category_name);
-      }
-    });
+    // Собираем уникальные category_name
+    const categories = [...new Set(products.map(p => p.category_name))];
 
     tabsEl.innerHTML = '';
     let isFirst = true;
-    categoryMap.forEach((name, id) => {
+    categories.forEach(name => {
       const tab = document.createElement('div');
       tab.className = 'tab';
       tab.textContent = name;
-      tab.dataset.category = id;
       tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
-        currentCategory = id;
+        currentCategory = name;
         renderSubcategories();
         renderProducts();
       });
       if (isFirst) {
         tab.classList.add('active');
-        currentCategory = id;
+        currentCategory = name;
         isFirst = false;
       }
       tabsEl.appendChild(tab);
     });
 
-    if (categoryMap.size > 0) {
+    if (categories.length > 0) {
       renderSubcategories();
       renderProducts();
     } else {
@@ -475,15 +476,17 @@
   }
 
   function renderSubcategories() {
-    if (currentCategory !== 'liquids') {
+    // Если нет текущей категории — скрываем
+    if (!currentCategory) {
       subcategoriesEl.style.display = 'none';
       currentSubcategory = null;
       return;
     }
 
+    // Фильтруем товары по category_name
     const brands = [...new Set(
       products
-        .filter(p => p.category === 'liquids' && p.subcategory)
+        .filter(p => p.category_name === currentCategory && p.subcategory)
         .map(p => p.subcategory)
     )];
 
@@ -518,8 +521,8 @@
   function renderProducts() {
     productsEl.innerHTML = '';
     const filtered = products.filter(item => {
-      if (item.category !== currentCategory) return false;
-      if (currentCategory === 'liquids' && currentSubcategory && item.subcategory !== currentSubcategory) return false;
+      if (item.category_name !== currentCategory) return false;
+      if (currentSubcategory && item.subcategory !== currentSubcategory) return false;
       return true;
     });
 
@@ -689,11 +692,11 @@
     if (totalSum >= 30000 && item.price_30k) return item.price_30k * qty;
     if (totalSum >= 10000 && item.price_10k) return item.price_10k * qty;
     if (totalSum >= 5000 && item.price_5k) return item.price_5k * qty;
-    // Если ни одна из оптовых цен не подходит — берём базовую (можно убрать, если не нужна)
+    // Если ни одна из оптовых цен не подходит — берём базовую
     return getBasePrice(item) * qty;
   }
 
-  // Базовая цена — минимальная из всех (или можно убрать)
+  // Базовая цена — минимальная из всех
   function getBasePrice(item) {
     return item.price_5k || item.price_10k || item.price_30k || item.price_50k || item.price_100k || 0;
   }
