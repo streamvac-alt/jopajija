@@ -156,6 +156,38 @@
       margin: 3px 0;
     }
 
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 8px 0;
+    }
+
+    .qty-btn {
+      width: 24px;
+      height: 24px;
+      background: #333;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: white;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qty-input {
+      width: 40px;
+      padding: 4px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: white;
+      text-align: center;
+      font-size: 14px;
+    }
+
     .add-to-cart {
       width: 100%;
       background: var(--accent);
@@ -246,7 +278,7 @@
       margin-top: 4px;
     }
 
-    .qty-btn {
+    .cart-qty-btn {
       width: 26px;
       height: 26px;
       background: #333;
@@ -258,6 +290,17 @@
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+
+    .cart-qty-input {
+      width: 40px;
+      padding: 4px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: white;
+      text-align: center;
+      font-size: 14px;
     }
 
     .checkout-form {
@@ -488,48 +531,77 @@
     filtered.forEach(item => {
       const card = document.createElement('div');
       card.className = 'product-card';
-      // Функция форматирования цены: если 0 — не показываем
-      const pOpt = item.price_opt || item.price_5k || 0;
-      const p5k = item.price_5k || 0;
-      const p10k = item.price_10k || 0;
-      const p30k = item.price_30k || 0;
-      const p50k = item.price_50k || 0;
-      const p100k = item.price_100k || 0;
+      // Формируем список цен (только от 5к и выше)
+      const prices = [
+        { label: 'От 5.000 ₽', price: item.price_5k },
+        { label: 'От 10.000 ₽', price: item.price_10k },
+        { label: 'От 30.000 ₽', price: item.price_30k },
+        { label: 'От 50.000 ₽', price: item.price_50k },
+        { label: 'От 100.000 ₽', price: item.price_100k }
+      ].filter(p => p.price > 0);
 
       card.innerHTML = `
         <img src="${item.img || 'https://placehold.co/150/252525/ffffff?text=No+Image'}" alt="${item.name}" class="product-img">
         <div class="product-info">
           <div class="product-name">${item.name}</div>
-          ${pOpt ? `<div class="price-tier">ОПТ: ${pOpt} ₽</div>` : ''}
-          ${p5k ? `<div class="price-tier">От 5.000 ₽: ${p5k} ₽</div>` : ''}
-          ${p10k ? `<div class="price-tier">От 10.000 ₽: ${p10k} ₽</div>` : ''}
-          ${p30k ? `<div class="price-tier">От 30.000 ₽: ${p30k} ₽</div>` : ''}
-          ${p50k ? `<div class="price-tier">От 50.000 ₽: ${p50k} ₽</div>` : ''}
-          ${p100k ? `<div class="price-tier">От 100.000 ₽: ${p100k} ₽</div>` : ''}
+          ${prices.map(p => `<div class="price-tier">${p.label}: ${p.price} ₽</div>`).join('')}
+          <div class="qty-controls">
+            <button class="qty-btn minus" data-id="${item.id}">−</button>
+            <input type="number" class="qty-input" value="1" min="1" data-id="${item.id}">
+            <button class="qty-btn plus" data-id="${item.id}">+</button>
+          </div>
           <button class="add-to-cart" data-id="${item.id}">В корзину</button>
         </div>
       `;
       productsEl.appendChild(card);
     });
 
+    // Обработчики +/- в карточке
+    document.querySelectorAll('.qty-btn.plus').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = Number(btn.dataset.id);
+        const input = btn.previousElementSibling;
+        input.value = Math.max(1, parseInt(input.value) + 1);
+      });
+    });
+
+    document.querySelectorAll('.qty-btn.minus').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = Number(btn.dataset.id);
+        const input = btn.nextElementSibling;
+        input.value = Math.max(1, parseInt(input.value) - 1);
+      });
+    });
+
+    // Ввод числа вручную
+    document.querySelectorAll('.qty-input').forEach(input => {
+      input.addEventListener('change', () => {
+        const val = parseInt(input.value);
+        if (isNaN(val) || val < 1) input.value = 1;
+      });
+    });
+
+    // Кнопка "В корзину"
     document.querySelectorAll('.add-to-cart').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = Number(btn.dataset.id);
-        addToCart(id);
+        const qtyInput = btn.parentElement.querySelector('.qty-input');
+        const qty = parseInt(qtyInput.value) || 1;
+        addToCart(id, qty);
         showNotification();
       });
     });
   }
 
-  function addToCart(productId) {
+  function addToCart(productId, qty = 1) {
     const item = products.find(p => p.id === productId);
     if (!item) return;
 
     const existing = cart.find(i => i.id === productId);
     if (existing) {
-      existing.qty += 1;
+      existing.qty += qty;
     } else {
-      cart.push({ ...item, qty: 1 });
+      cart.push({ ...item, qty: qty });
     }
     saveCart();
     updateCartView();
@@ -549,9 +621,9 @@
         <div class="cart-item-info">
           <div class="cart-item-name">${item.name}</div>
           <div class="cart-item-qty">
-            <button class="qty-btn minus" data-id="${item.id}">−</button>
-            <span>${item.qty}</span>
-            <button class="qty-btn plus" data-id="${item.id}">+</button>
+            <button class="cart-qty-btn minus" data-id="${item.id}">−</button>
+            <input type="number" class="cart-qty-input" value="${item.qty}" min="1" data-id="${item.id}">
+            <button class="cart-qty-btn plus" data-id="${item.id}">+</button>
           </div>
         </div>
         <div>${getPrice(item)} ₽</div>
@@ -559,48 +631,71 @@
       cartItemsEl.appendChild(el);
     });
 
-    // Обработчики +/- (оставлены для количества, но цена берётся по сумме)
-    document.querySelectorAll('.plus').forEach(btn => {
+    // Обработчики +/- в корзине
+    document.querySelectorAll('.cart-qty-btn.plus').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = Number(btn.dataset.id);
-        const item = cart.find(i => i.id === id);
-        if (item) {
-          item.qty += 1;
-          saveCart();
-          updateCartView();
-        }
+        const input = btn.previousElementSibling;
+        const val = parseInt(input.value) + 1;
+        input.value = val;
+        updateCartItemQty(id, val);
       });
     });
 
-    document.querySelectorAll('.minus').forEach(btn => {
+    document.querySelectorAll('.cart-qty-btn.minus').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = Number(btn.dataset.id);
-        const item = cart.find(i => i.id === id);
-        if (item && item.qty > 1) {
-          item.qty -= 1;
-          saveCart();
-          updateCartView();
-        } else if (item && item.qty === 1) {
-          cart = cart.filter(i => i.id !== id);
-          saveCart();
-          updateCartView();
+        const input = btn.nextElementSibling;
+        const val = Math.max(1, parseInt(input.value) - 1);
+        input.value = val;
+        updateCartItemQty(id, val);
+      });
+    });
+
+    // Изменение через ввод
+    document.querySelectorAll('.cart-qty-input').forEach(input => {
+      input.addEventListener('change', () => {
+        const id = Number(input.dataset.id);
+        const val = parseInt(input.value);
+        if (isNaN(val) || val < 1) {
+          input.value = 1;
+          updateCartItemQty(id, 1);
+        } else {
+          updateCartItemQty(id, val);
         }
       });
     });
   }
 
-  // 🔥 ЦЕНОВАЯ ЛОГИКА — по сумме, а не по количеству
+  function updateCartItemQty(itemId, qty) {
+    const item = cart.find(i => i.id === itemId);
+    if (item) {
+      item.qty = qty;
+      if (qty <= 0) {
+        cart = cart.filter(i => i.id !== itemId);
+      }
+      saveCart();
+      updateCartView();
+    }
+  }
+
+  // 🔥 ЦЕНОВАЯ ЛОГИКА — по сумме заказа
   function getPrice(item) {
-    const totalSum = cart.reduce((sum, i) => sum + (i.qty * (i.price_opt || i.price_5k || 0)), 0);
+    const totalSum = cart.reduce((sum, i) => sum + (i.qty * getBasePrice(i)), 0);
     const qty = item.qty;
-    const basePrice = item.price_opt || item.price_5k || 0;
 
     if (totalSum >= 100000 && item.price_100k) return item.price_100k * qty;
     if (totalSum >= 50000 && item.price_50k) return item.price_50k * qty;
     if (totalSum >= 30000 && item.price_30k) return item.price_30k * qty;
     if (totalSum >= 10000 && item.price_10k) return item.price_10k * qty;
     if (totalSum >= 5000 && item.price_5k) return item.price_5k * qty;
-    return basePrice * qty;
+    // Если ни одна из оптовых цен не подходит — берём базовую (можно убрать, если не нужна)
+    return getBasePrice(item) * qty;
+  }
+
+  // Базовая цена — минимальная из всех (или можно убрать)
+  function getBasePrice(item) {
+    return item.price_5k || item.price_10k || item.price_30k || item.price_50k || item.price_100k || 0;
   }
 
   function saveCart() {
