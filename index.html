@@ -16,6 +16,7 @@
       --accent-dark: #ff0055;
       --border: #222;
       --success: #4cd964;
+      --danger: #ff4c4c;
     }
 
     * {
@@ -312,6 +313,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      margin-top: 6px;
     }
 
     .cart-qty-btn {
@@ -340,8 +342,35 @@
       font-weight: 600;
     }
 
+    .remove-item {
+      background: none;
+      border: none;
+      color: var(--danger);
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 8px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .remove-item:hover {
+      color: #ff7070;
+    }
+
+    .cart-total {
+      font-weight: 800;
+      font-size: 18px;
+      margin: 20px 0;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      color: var(--accent);
+    }
+
     .checkout-form {
-      margin-top: 28px;
+      margin-top: 12px;
     }
 
     .form-input {
@@ -441,6 +470,10 @@
 <div class="cart-panel" id="cartPanel">
   <div class="cart-title">Ваш заказ</div>
   <div id="cartItems"></div>
+  <div class="cart-total">
+    <span>Итого:</span>
+    <span id="cartTotal">0 ₽</span>
+  </div>
   <div id="checkoutForm" class="checkout-form">
     <input type="text" class="form-input" id="telegramUser" placeholder="Ваш @username в Telegram">
     <input type="text" class="form-input" id="sdekAddress" placeholder="Адрес СДЭК (город + ПВЗ)">
@@ -464,6 +497,7 @@
   const cartBtn = document.getElementById('cartBtn');
   const cartPanel = document.getElementById('cartPanel');
   const cartItemsEl = document.getElementById('cartItems');
+  const cartTotalEl = document.getElementById('cartTotal');
   const checkoutBtn = document.getElementById('checkoutBtn');
   const telegramInput = document.getElementById('telegramUser');
   const sdekInput = document.getElementById('sdekAddress');
@@ -651,13 +685,43 @@
     updateCartView();
   }
 
+  function removeFromCart(productId) {
+    cart = cart.filter(item => item.id !== productId);
+    saveCart();
+    updateCartView();
+  }
+
+  function updateCartItemQty(productId, qty) {
+    const item = cart.find(i => i.id === productId);
+    if (item) {
+      if (qty <= 0) {
+        removeFromCart(productId);
+      } else {
+        item.qty = qty;
+        saveCart();
+        updateCartView();
+      }
+    }
+  }
+
+  function saveCart() {
+    localStorage.setItem('cart', JSON.stringify(cart));
+  }
+
   function updateCartView() {
     if (cart.length === 0) {
       cartItemsEl.innerHTML = '<div class="empty-cart">Корзина пуста</div>';
+      cartTotalEl.textContent = '0 ₽';
       return;
     }
+    
     cartItemsEl.innerHTML = '';
+    let total = 0;
+    
     cart.forEach(item => {
+      const itemTotal = getPrice(item);
+      total += itemTotal;
+      
       const el = document.createElement('div');
       el.className = 'cart-item';
       el.innerHTML = `
@@ -668,57 +732,58 @@
             <input type="number" class="cart-qty-input" value="${item.qty}" min="1" data-id="${item.id}">
             <button class="cart-qty-btn plus" data-id="${item.id}">+</button>
           </div>
+          <button class="remove-item" data-id="${item.id}">
+            <i>🗑️</i> Удалить
+          </button>
         </div>
-        <div>${getPrice(item)} ₽</div>
+        <div>${itemTotal} ₽</div>
       `;
       cartItemsEl.appendChild(el);
     });
-
+    
+    cartTotalEl.textContent = `${total} ₽`;
+    
+    // Add event listeners
     document.querySelectorAll('.cart-qty-btn.plus').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const id = Number(btn.dataset.id);
         const input = btn.previousElementSibling;
         const val = parseInt(input.value) + 1;
-        input.value = val;
         updateCartItemQty(id, val);
       });
     });
+    
     document.querySelectorAll('.cart-qty-btn.minus').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const id = Number(btn.dataset.id);
         const input = btn.nextElementSibling;
         const val = Math.max(1, parseInt(input.value) - 1);
-        input.value = val;
         updateCartItemQty(id, val);
       });
     });
+    
     document.querySelectorAll('.cart-qty-input').forEach(input => {
       input.addEventListener('change', (e) => {
         e.stopPropagation();
         const id = Number(input.dataset.id);
         const val = parseInt(input.value);
         if (isNaN(val) || val < 1) {
-          input.value = 1;
           updateCartItemQty(id, 1);
         } else {
           updateCartItemQty(id, val);
         }
       });
     });
-  }
-
-  function updateCartItemQty(itemId, qty) {
-    const item = cart.find(i => i.id === itemId);
-    if (item) {
-      item.qty = qty;
-      if (qty <= 0) {
-        cart = cart.filter(i => i.id !== itemId);
-      }
-      saveCart();
-      updateCartView();
-    }
+    
+    document.querySelectorAll('.remove-item').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = Number(btn.dataset.id);
+        removeFromCart(id);
+      });
+    });
   }
 
   function getPrice(item) {
@@ -734,10 +799,6 @@
 
   function getBasePrice(item) {
     return item.price_5k || item.price_10k || item.price_30k || item.price_50k || item.price_100k || 0;
-  }
-
-  function saveCart() {
-    localStorage.setItem('cart', JSON.stringify(cart));
   }
 
   cartBtn.addEventListener('click', (e) => {
