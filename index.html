@@ -362,7 +362,7 @@
 <div class="notification" id="notification">Товар добавлен!</div>
 
 <script>
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbznVHc-ifgUd2CGUZulFnkHkU0QDoABbgGiXoSpI_AP1ljt1CG6QasWEzO4cafzo7C9/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx8p7KvP3QiobeQ8rLL7hTQL8_kblh-TiZS841Yo6gi94kHzh2HvG1XCGS5Umw0HuiM/exec';
 
   let products = [];
   let currentCategory = '';
@@ -383,28 +383,23 @@
   async function fetchProducts() {
     try {
       const response = await fetch(APPS_SCRIPT_URL + '?_=' + Date.now());
-      const text = await response.text();
-      // Убираем возможные HTML-ошибки или предупреждения
-      if (text.includes('<!DOCTYPE') || text.includes('TypeError')) {
-        throw new Error('Ошибка в Apps Script');
-      }
-      const data = JSON.parse(text);
+      const data = await response.json();
 
       if (Array.isArray(data)) {
         products = data;
       } else {
         products = data.products || [];
       }
+
       return true;
     } catch (e) {
       console.error('Ошибка загрузки:', e);
-      productsEl.innerHTML = '<div class="error">Не удалось загрузить товары. Проверьте Google Таблицу и Apps Script.</div>';
+      productsEl.innerHTML = '<div class="error">Не удалось загрузить товары. Проверьте таблицу.</div>';
       return false;
     }
   }
 
   function renderTabs() {
-    // Собираем уникальные категории по category_name
     const categoryMap = new Map();
     products.forEach(p => {
       if (p.category && p.category_name) {
@@ -434,11 +429,11 @@
       tabsEl.appendChild(tab);
     });
 
-    if (categoryMap.size > 0 && isFirst === false) {
+    if (categoryMap.size > 0) {
       renderSubcategories();
       renderProducts();
     } else {
-      productsEl.innerHTML = '<div class="error">Нет категорий в таблице</div>';
+      productsEl.innerHTML = '<div class="error">Нет категорий в данных</div>';
     }
   }
 
@@ -658,7 +653,6 @@
     }, 2000);
   }
 
-  // Инициализация
   (async () => {
     const success = await fetchProducts();
     if (success) {
@@ -666,14 +660,12 @@
     }
   })();
 
-  // Закрытие корзины
   document.addEventListener('click', (e) => {
     if (!cartPanel.contains(e.target) && e.target !== cartBtn) {
       cartPanel.style.display = 'none';
     }
   });
 
-  // Поддержка Telegram WebApp
   if (window.Telegram?.WebApp) {
     Telegram.WebApp.ready();
     Telegram.WebApp.expand();
