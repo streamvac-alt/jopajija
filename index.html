@@ -384,13 +384,7 @@
     try {
       const response = await fetch(APPS_SCRIPT_URL + '?_=' + Date.now());
       const data = await response.json();
-
-      if (Array.isArray(data)) {
-        products = data;
-      } else {
-        products = data.products || [];
-      }
-
+      products = Array.isArray(data) ? data : (data.products || []);
       return true;
     } catch (e) {
       console.error('Ошибка загрузки:', e);
@@ -433,7 +427,7 @@
       renderSubcategories();
       renderProducts();
     } else {
-      productsEl.innerHTML = '<div class="error">Нет категорий в данных</div>';
+      productsEl.innerHTML = '<div class="error">Нет категорий</div>';
     }
   }
 
@@ -494,13 +488,24 @@
     filtered.forEach(item => {
       const card = document.createElement('div');
       card.className = 'product-card';
+      // Функция форматирования цены: если 0 — не показываем
+      const pOpt = item.price_opt || item.price_5k || 0;
+      const p5k = item.price_5k || 0;
+      const p10k = item.price_10k || 0;
+      const p30k = item.price_30k || 0;
+      const p50k = item.price_50k || 0;
+      const p100k = item.price_100k || 0;
+
       card.innerHTML = `
         <img src="${item.img || 'https://placehold.co/150/252525/ffffff?text=No+Image'}" alt="${item.name}" class="product-img">
         <div class="product-info">
           <div class="product-name">${item.name}</div>
-          <div class="price-tier">1 шт: ${item.price1} ₽</div>
-          <div class="price-tier">5 шт: ${item.price5} ₽</div>
-          <div class="price-tier">10 шт: ${item.price10} ₽</div>
+          ${pOpt ? `<div class="price-tier">ОПТ: ${pOpt} ₽</div>` : ''}
+          ${p5k ? `<div class="price-tier">От 5.000 ₽: ${p5k} ₽</div>` : ''}
+          ${p10k ? `<div class="price-tier">От 10.000 ₽: ${p10k} ₽</div>` : ''}
+          ${p30k ? `<div class="price-tier">От 30.000 ₽: ${p30k} ₽</div>` : ''}
+          ${p50k ? `<div class="price-tier">От 50.000 ₽: ${p50k} ₽</div>` : ''}
+          ${p100k ? `<div class="price-tier">От 100.000 ₽: ${p100k} ₽</div>` : ''}
           <button class="add-to-cart" data-id="${item.id}">В корзину</button>
         </div>
       `;
@@ -554,6 +559,7 @@
       cartItemsEl.appendChild(el);
     });
 
+    // Обработчики +/- (оставлены для количества, но цена берётся по сумме)
     document.querySelectorAll('.plus').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = Number(btn.dataset.id);
@@ -583,10 +589,18 @@
     });
   }
 
+  // 🔥 ЦЕНОВАЯ ЛОГИКА — по сумме, а не по количеству
   function getPrice(item) {
-    if (item.qty >= 10) return item.price10 * item.qty;
-    if (item.qty >= 5) return item.price5 * item.qty;
-    return item.price1 * item.qty;
+    const totalSum = cart.reduce((sum, i) => sum + (i.qty * (i.price_opt || i.price_5k || 0)), 0);
+    const qty = item.qty;
+    const basePrice = item.price_opt || item.price_5k || 0;
+
+    if (totalSum >= 100000 && item.price_100k) return item.price_100k * qty;
+    if (totalSum >= 50000 && item.price_50k) return item.price_50k * qty;
+    if (totalSum >= 30000 && item.price_30k) return item.price_30k * qty;
+    if (totalSum >= 10000 && item.price_10k) return item.price_10k * qty;
+    if (totalSum >= 5000 && item.price_5k) return item.price_5k * qty;
+    return basePrice * qty;
   }
 
   function saveCart() {
@@ -617,7 +631,8 @@
     cart.forEach(item => {
       message += `- ${item.name} ×${item.qty} = ${getPrice(item)} ₽\n`;
     });
-    message += `\nИтого: ${cart.reduce((sum, item) => sum + getPrice(item), 0)} ₽`;
+    const total = cart.reduce((sum, item) => sum + getPrice(item), 0);
+    message += `\nИтого: ${total} ₽`;
 
     const botToken = '8385164830:AAFg-G2MVV5sR4OrtOosil60docftF86NDQ';
     const adminId = '660436506';
