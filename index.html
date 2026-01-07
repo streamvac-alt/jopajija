@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <title>TestShop</title>
+  <title>TestShop — Премиум Оптовый Вейпшоп</title>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     :root {
       --bg: #000;
@@ -16,6 +17,7 @@
       --accent-dark: #ff0055;
       --border: #222;
       --success: #4cd964;
+      --warning: #ffcc00;
     }
 
     * {
@@ -29,91 +31,143 @@
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      padding-bottom: 100px;
+      padding-bottom: 120px;
+      position: relative;
     }
 
+    /* Header with Search */
     header {
-      padding: 20px 24px;
-      text-align: center;
+      background: #000;
+      padding: 16px 20px;
       position: sticky;
       top: 0;
-      z-index: 100;
-      background: #000;
+      z-index: 1000;
       border-bottom: 1px solid var(--border);
     }
 
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
     .logo {
-      font-size: 32px;
+      font-size: 28px;
       font-weight: 800;
-      letter-spacing: -1.2px;
+      letter-spacing: -1px;
       background: linear-gradient(90deg, #ff2a6d, #ff7b54);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
     }
 
-    .tabs {
-      display: flex;
-      gap: 14px;
-      padding: 16px 20px 12px;
-      overflow-x: auto;
-      background: var(--bg);
-      scrollbar-width: none;
+    .search-container {
+      position: relative;
+      flex: 1;
+      max-width: 400px;
+      margin: 0 20px;
     }
-    .tabs::-webkit-scrollbar { display: none; }
 
-    .tab {
-      padding: 10px 22px;
+    .search-input {
+      width: 100%;
+      padding: 10px 16px 10px 40px;
       background: var(--card);
-      border-radius: 14px;
-      font-weight: 700;
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      color: white;
       font-size: 15px;
-      white-space: nowrap;
-      cursor: pointer;
-      transition: all 0.25s ease;
-      border: 2px solid var(--card);
     }
-    .tab.active {
+
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    .cart-icon-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .cart-count {
+      position: absolute;
+      top: -8px;
+      right: -8px;
       background: var(--accent);
       color: white;
-      border-color: var(--accent);
-    }
-    .tab:hover:not(.active) {
-      background: #1c1c1c;
-      border-color: #333;
+      font-size: 11px;
+      font-weight: 700;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .subcategories {
-      padding: 12px 20px 12px;
-      background: var(--bg);
-      display: none;
-      flex-wrap: wrap;
+    /* Filter bar */
+    .filters {
+      padding: 16px 20px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
       gap: 12px;
       overflow-x: auto;
       scrollbar-width: none;
     }
-    .subcategories::-webkit-scrollbar { display: none; }
+    .filters::-webkit-scrollbar { display: none; }
 
-    .subcategory {
-      padding: 8px 20px;
-      background: var(--card);
+    .filter-btn {
+      padding: 8px 16px;
+      background: #1a1a1a;
       border-radius: 50px;
       font-size: 14px;
+      color: var(--text-muted);
       cursor: pointer;
-      transition: all 0.2s;
-      border: 2px solid var(--card);
+      white-space: nowrap;
+      border: 1px solid var(--border);
     }
-    .subcategory.active, .subcategory:hover {
+    .filter-btn.active, .filter-btn:hover {
       background: var(--accent);
       color: white;
       border-color: var(--accent);
     }
 
-    .products {
+    /* Main content */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .sort-controls {
+      display: flex;
+      justify-content: flex-end;
+      padding: 12px 0;
+    }
+
+    .sort-select {
+      background: var(--card);
+      color: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+
+    .products-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: 24px;
-      padding: 24px 20px 120px;
+      margin-top: 12px;
     }
 
     .product-card {
@@ -122,6 +176,7 @@
       overflow: hidden;
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       border: 1px solid var(--border);
+      position: relative;
     }
     .product-card:hover {
       transform: translateY(-6px);
@@ -131,20 +186,20 @@
 
     .product-img {
       width: 100%;
-      height: 160px;
+      height: 180px;
       object-fit: contain;
-      padding: 16px;
+      padding: 20px;
       background: #0a0a0a;
     }
 
     .product-info {
-      padding: 16px;
+      padding: 18px;
     }
 
     .product-name {
       font-weight: 700;
-      font-size: 15px;
-      margin-bottom: 10px;
+      font-size: 16px;
+      margin-bottom: 12px;
       line-height: 1.3;
       color: white;
       display: -webkit-box;
@@ -153,23 +208,32 @@
       overflow: hidden;
     }
 
-    .price-tier {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin: 4px 0;
-      font-weight: 500;
+    .price-tiers {
+      margin: 12px 0;
     }
 
-    .qty-controls {
+    .price-tier {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin: 4px 0;
+      display: flex;
+      justify-content: space-between;
+    }
+    .price-tier.active {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .qty-section {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin: 14px 0;
+      margin: 16px 0;
     }
 
     .qty-btn {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       background: #1e1e1e;
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -187,14 +251,14 @@
     }
 
     .qty-input {
-      width: 56px;
-      padding: 6px;
+      width: 60px;
+      padding: 8px;
       background: #151515;
       border: 1px solid var(--border);
       border-radius: 10px;
       color: white;
       text-align: center;
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 600;
     }
 
@@ -203,71 +267,90 @@
       background: var(--accent);
       color: white;
       border: none;
-      padding: 12px;
+      padding: 14px;
       border-radius: 14px;
       font-weight: 700;
-      font-size: 15px;
+      font-size: 16px;
       cursor: pointer;
-      transition: background 0.2s, transform 0.15s;
+      transition: all 0.2s;
     }
     .add-to-cart:hover {
       background: var(--accent-dark);
       transform: scale(1.02);
     }
 
-    .cart-btn {
-      position: fixed;
-      bottom: 28px;
-      right: 28px;
-      width: 72px;
-      height: 72px;
-      background: var(--accent);
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      cursor: pointer;
-      box-shadow: 0 8px 24px rgba(255, 42, 109, 0.6);
-      z-index: 1000;
-      transition: transform 0.25s, box-shadow 0.25s;
-    }
-    .cart-btn:hover {
-      transform: scale(1.1) rotate(3deg);
-      box-shadow: 0 10px 30px rgba(255, 42, 109, 0.8);
-    }
-
+    /* Cart panel */
     .cart-panel {
       position: fixed;
-      bottom: 110px;
-      right: 28px;
-      width: 360px;
+      top: 0;
+      right: -400px;
+      width: 380px;
+      height: 100vh;
       background: var(--card);
-      border-radius: 24px;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-      padding: 28px;
-      display: none;
-      max-height: 70vh;
-      overflow-y: auto;
-      z-index: 1000;
-      border: 1px solid var(--border);
+      border-left: 1px solid var(--border);
+      box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+      z-index: 2000;
+      transition: right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .cart-panel.open {
+      right: 0;
+    }
+
+    .cart-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .cart-title {
       font-weight: 800;
       font-size: 22px;
-      margin-bottom: 24px;
-      text-align: center;
       color: white;
+    }
+
+    .close-cart {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 24px;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .close-cart:hover {
+      background: #222;
+      color: white;
+    }
+
+    .cart-items {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 24px;
     }
 
     .cart-item {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 0;
+      padding: 18px 0;
       border-bottom: 1px solid var(--border);
+    }
+
+    .cart-item-img {
+      width: 60px;
+      height: 60px;
+      object-fit: contain;
+      background: #0a0a0a;
+      border-radius: 10px;
+      margin-right: 16px;
     }
 
     .cart-item-info {
@@ -275,25 +358,30 @@
     }
 
     .cart-item-name {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
       color: white;
-      line-height: 1.3;
     }
 
-    .cart-item-qty {
+    .cart-item-price {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .cart-qty-controls {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .cart-qty-btn {
-      width: 34px;
-      height: 34px;
+      width: 30px;
+      height: 30px;
       background: #1e1e1e;
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 8px;
       color: white;
       font-weight: 600;
       cursor: pointer;
@@ -303,19 +391,37 @@
     }
 
     .cart-qty-input {
-      width: 60px;
-      padding: 8px;
+      width: 48px;
+      padding: 6px;
       background: #151515;
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 8px;
       color: white;
       text-align: center;
-      font-size: 15px;
-      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .cart-remove {
+      color: #ff4c4c;
+      background: none;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .cart-total {
+      padding: 20px 24px;
+      border-top: 1px solid var(--border);
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
     }
 
     .checkout-form {
-      margin-top: 28px;
+      padding: 24px;
+      border-top: 1px solid var(--border);
     }
 
     .form-input {
@@ -346,14 +452,39 @@
       background: var(--accent-dark);
     }
 
-    .empty-cart {
-      text-align: center;
-      color: var(--text-muted);
-      padding: 40px 0;
-      font-style: italic;
-      font-size: 16px;
+    .checkout-btn:disabled {
+      background: #444;
+      cursor: not-allowed;
     }
 
+    /* Overlay */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      z-index: 1999;
+      display: none;
+    }
+    .overlay.visible {
+      display: block;
+    }
+
+    /* Empty states */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      color: #444;
+    }
+
+    /* Notification */
     .notification {
       position: fixed;
       top: 24px;
@@ -362,182 +493,229 @@
       color: #000;
       padding: 14px 24px;
       border-radius: 16px;
-      display: none;
       z-index: 2000;
       box-shadow: 0 6px 20px rgba(0,0,0,0.4);
       font-weight: 700;
-      animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transform: translateX(120%);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .notification.show {
+      transform: translateX(0);
     }
 
-    @keyframes popIn {
-      0% { transform: scale(0.7) translateY(30px); opacity: 0; }
-      80% { transform: scale(1.05); }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
-    .loading, .error {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 50px 20px;
-      color: var(--text-muted);
-      font-size: 16px;
+    /* Responsive */
+    @media (max-width: 768px) {
+      .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      }
+      .header-content {
+        flex-direction: column;
+        gap: 12px;
+      }
+      .search-container {
+        margin: 12px 0;
+        max-width: 100%;
+      }
     }
   </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">TestShop</div>
+  <div class="header-content">
+    <div class="logo">TestShop</div>
+    <div class="search-container">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" class="search-input" id="searchInput" placeholder="Поиск по названию...">
+    </div>
+    <button class="cart-icon-btn" id="cartIconBtn">
+      <i class="fas fa-shopping-cart"></i>
+      <span class="cart-count" id="cartCount">0</span>
+    </button>
+  </div>
 </header>
 
-<div class="tabs" id="tabs"></div>
-
-<div class="subcategories" id="subcategories"></div>
-
-<div class="products" id="products">
-  <div class="loading">Загрузка товаров...</div>
+<div class="filters" id="categoryFilters">
+  <!-- Dynamic categories -->
 </div>
 
-<div class="cart-btn" id="cartBtn">🛒</div>
+<div class="container">
+  <div class="sort-controls">
+    <select class="sort-select" id="sortSelect">
+      <option value="name-asc">По названию (А-Я)</option>
+      <option value="name-desc">По названию (Я-А)</option>
+      <option value="price-asc">По цене (низкая → высокая)</option>
+      <option value="price-desc">По цене (высокая → низкая)</option>
+    </select>
+  </div>
 
-<div class="cart-panel" id="cartPanel">
-  <div class="cart-title">Ваш заказ</div>
-  <div id="cartItems"></div>
-  <div id="checkoutForm" class="checkout-form">
-    <input type="text" class="form-input" id="telegramUser" placeholder="Ваш @username в Telegram">
-    <input type="text" class="form-input" id="sdekAddress" placeholder="Адрес СДЭК (город + ПВЗ)">
-    <button class="checkout-btn" id="checkoutBtn">Оформить заказ</button>
+  <div class="products-grid" id="productsGrid">
+    <div class="empty-state">
+      <i class="fas fa-box-open"></i>
+      <p>Загрузка товаров...</p>
+    </div>
   </div>
 </div>
 
-<div class="notification" id="notification">Товар добавлен!</div>
+<div class="cart-panel" id="cartPanel">
+  <div class="cart-header">
+    <div class="cart-title">Ваш заказ</div>
+    <button class="close-cart" id="closeCart">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+  <div class="cart-items" id="cartItems">
+    <!-- Cart items -->
+  </div>
+  <div class="cart-total">
+    <span>Итого:</span>
+    <span id="cartTotal">0 ₽</span>
+  </div>
+  <div class="checkout-form">
+    <input type="text" class="form-input" id="telegramUser" placeholder="Ваш @username в Telegram">
+    <input type="text" class="form-input" id="sdekAddress" placeholder="Адрес СДЭК (город + ПВЗ)">
+    <button class="checkout-btn" id="checkoutBtn" disabled>Оформить заказ</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="notification" id="notification">Товар добавлен в корзину!</div>
 
 <script>
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx8p7KvP3QiobeQ8rLL7hTQL8_kblh-TiZS841Yo6gi94kHzh2HvG1XCGS5Umw0HuiM/exec';
-
+  
   let products = [];
-  let currentCategory = '';
-  let currentSubcategory = null;
   let cart = JSON.parse(localStorage.getItem('cart')) || [];
+  let filteredProducts = [];
 
-  const productsEl = document.getElementById('products');
-  const tabsEl = document.getElementById('tabs');
-  const subcategoriesEl = document.getElementById('subcategories');
-  const cartBtn = document.getElementById('cartBtn');
+  // DOM elements
+  const productsGrid = document.getElementById('productsGrid');
+  const categoryFilters = document.getElementById('categoryFilters');
   const cartPanel = document.getElementById('cartPanel');
-  const cartItemsEl = document.getElementById('cartItems');
+  const cartIconBtn = document.getElementById('cartIconBtn');
+  const closeCart = document.getElementById('closeCart');
+  const overlay = document.getElementById('overlay');
+  const cartItems = document.getElementById('cartItems');
+  const cartTotal = document.getElementById('cartTotal');
+  const cartCount = document.getElementById('cartCount');
   const checkoutBtn = document.getElementById('checkoutBtn');
-  const telegramInput = document.getElementById('telegramUser');
-  const sdekInput = document.getElementById('sdekAddress');
+  const telegramUser = document.getElementById('telegramUser');
+  const sdekAddress = document.getElementById('sdekAddress');
   const notification = document.getElementById('notification');
+  const searchInput = document.getElementById('searchInput');
+  const sortSelect = document.getElementById('sortSelect');
 
+  // Fetch products
   async function fetchProducts() {
     try {
       const response = await fetch(APPS_SCRIPT_URL + '?_=' + Date.now());
       const data = await response.json();
       products = Array.isArray(data) ? data : (data.products || []);
+      filteredProducts = [...products];
+      renderCategories();
+      renderProducts();
+      updateCartUI();
       return true;
     } catch (e) {
       console.error('Ошибка загрузки:', e);
-      productsEl.innerHTML = '<div class="error">Не удалось загрузить товары. Проверьте таблицу.</div>';
+      productsGrid.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Не удалось загрузить товары</p></div>';
       return false;
     }
   }
 
-  function renderTabs() {
+  // Render categories
+  function renderCategories() {
     const categories = [...new Set(products.map(p => p.category_name))];
-    tabsEl.innerHTML = '';
-    let isFirst = true;
-    categories.forEach(name => {
-      const tab = document.createElement('div');
-      tab.className = 'tab';
-      tab.textContent = name;
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        currentCategory = name;
-        renderSubcategories();
-        renderProducts();
-      });
-      if (isFirst) {
-        tab.classList.add('active');
-        currentCategory = name;
-        isFirst = false;
-      }
-      tabsEl.appendChild(tab);
-    });
-    if (categories.length > 0) {
-      renderSubcategories();
-      renderProducts();
-    } else {
-      productsEl.innerHTML = '<div class="error">Нет категорий</div>';
-    }
-  }
-
-  function renderSubcategories() {
-    if (!currentCategory) {
-      subcategoriesEl.style.display = 'none';
-      currentSubcategory = null;
-      return;
-    }
-    const brands = [...new Set(
-      products
-        .filter(p => p.category_name === currentCategory && p.subcategory)
-        .map(p => p.subcategory)
-    )];
-    subcategoriesEl.innerHTML = '';
-    const allBtn = document.createElement('div');
-    allBtn.className = 'subcategory active';
-    allBtn.textContent = 'Все';
-    allBtn.addEventListener('click', () => {
-      currentSubcategory = null;
-      document.querySelectorAll('.subcategory').forEach(el => el.classList.remove('active'));
-      allBtn.classList.add('active');
-      renderProducts();
-    });
-    subcategoriesEl.appendChild(allBtn);
-    brands.forEach(brand => {
+    categoryFilters.innerHTML = '<div class="filter-btn active" data-category="all">Все товары</div>';
+    
+    categories.forEach(cat => {
       const btn = document.createElement('div');
-      btn.className = 'subcategory';
-      btn.textContent = brand;
+      btn.className = 'filter-btn';
+      btn.textContent = cat;
+      btn.dataset.category = cat;
       btn.addEventListener('click', () => {
-        currentSubcategory = brand;
-        document.querySelectorAll('.subcategory').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        renderProducts();
+        filterProducts();
       });
-      subcategoriesEl.appendChild(btn);
+      categoryFilters.appendChild(btn);
     });
-    subcategoriesEl.style.display = 'flex';
+    filterProducts();
   }
 
+  // Filter and sort products
+  function filterProducts() {
+    const searchValue = searchInput.value.toLowerCase().trim();
+    const activeCategory = document.querySelector('.filter-btn.active').dataset.category;
+    
+    let result = products;
+    
+    if (activeCategory !== 'all') {
+      result = result.filter(p => p.category_name === activeCategory);
+    }
+    
+    if (searchValue) {
+      result = result.filter(p => p.name.toLowerCase().includes(searchValue));
+    }
+    
+    // Apply sorting
+    const sortValue = sortSelect.value;
+    if (sortValue === 'name-asc') {
+      result.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortValue === 'name-desc') {
+      result.sort((a, b) => b.name.localeCompare(a.name));
+    } else if (sortValue === 'price-asc') {
+      result.sort((a, b) => getBasePrice(a) - getBasePrice(b));
+    } else if (sortValue === 'price-desc') {
+      result.sort((a, b) => getBasePrice(b) - getBasePrice(a));
+    }
+    
+    filteredProducts = result;
+    renderProducts();
+  }
+
+  // Render products
   function renderProducts() {
-    productsEl.innerHTML = '';
-    const filtered = products.filter(item => {
-      if (item.category_name !== currentCategory) return false;
-      if (currentSubcategory && item.subcategory !== currentSubcategory) return false;
-      return true;
-    });
-    if (filtered.length === 0) {
-      productsEl.innerHTML = '<div class="error">Нет товаров в этой категории</div>';
+    if (filteredProducts.length === 0) {
+      productsGrid.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i><p>Товары не найдены</p></div>';
       return;
     }
-    filtered.forEach(item => {
+    
+    productsGrid.innerHTML = '';
+    filteredProducts.forEach(item => {
       const card = document.createElement('div');
       card.className = 'product-card';
-      const prices = [
+      
+      // Determine active price tier
+      const totalSum = cart.reduce((sum, i) => sum + (i.qty * getBasePrice(i)), 0);
+      const basePrice = getBasePrice(item);
+      let activeTier = { label: '', price: basePrice };
+      
+      if (totalSum >= 100000 && item.price_100k) activeTier = { label: 'От 100.000 ₽', price: item.price_100k };
+      else if (totalSum >= 50000 && item.price_50k) activeTier = { label: 'От 50.000 ₽', price: item.price_50k };
+      else if (totalSum >= 30000 && item.price_30k) activeTier = { label: 'От 30.000 ₽', price: item.price_30k };
+      else if (totalSum >= 10000 && item.price_10k) activeTier = { label: 'От 10.000 ₽', price: item.price_10k };
+      else if (totalSum >= 5000 && item.price_5k) activeTier = { label: 'От 5.000 ₽', price: item.price_5k };
+      
+      const priceTiers = [
         { label: 'От 5.000 ₽', price: item.price_5k },
         { label: 'От 10.000 ₽', price: item.price_10k },
         { label: 'От 30.000 ₽', price: item.price_30k },
         { label: 'От 50.000 ₽', price: item.price_50k },
         { label: 'От 100.000 ₽', price: item.price_100k }
       ].filter(p => p.price > 0);
+      
       card.innerHTML = `
         <img src="${item.img || 'https://placehold.co/150/111111/ffffff?text=No+Image'}" alt="${item.name}" class="product-img">
         <div class="product-info">
           <div class="product-name">${item.name}</div>
-          ${prices.map(p => `<div class="price-tier">${p.label}: ${p.price} ₽</div>`).join('')}
-          <div class="qty-controls">
+          <div class="price-tiers">
+            ${priceTiers.map(p => 
+              `<div class="price-tier ${p.label === activeTier.label ? 'active' : ''}">${p.label}: <strong>${p.price} ₽</strong></div>`
+            ).join('')}
+          </div>
+          <div class="qty-section">
             <button class="qty-btn minus" data-id="${item.id}">−</button>
             <input type="number" class="qty-input" value="1" min="1" data-id="${item.id}">
             <button class="qty-btn plus" data-id="${item.id}">+</button>
@@ -545,9 +723,10 @@
           <button class="add-to-cart" data-id="${item.id}">В корзину</button>
         </div>
       `;
-      productsEl.appendChild(card);
+      productsGrid.appendChild(card);
     });
-
+    
+    // Add event listeners
     document.querySelectorAll('.qty-btn.plus').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = Number(btn.dataset.id);
@@ -555,6 +734,7 @@
         input.value = Math.max(1, parseInt(input.value) + 1);
       });
     });
+    
     document.querySelectorAll('.qty-btn.minus').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = Number(btn.dataset.id);
@@ -562,12 +742,14 @@
         input.value = Math.max(1, parseInt(input.value) - 1);
       });
     });
+    
     document.querySelectorAll('.qty-input').forEach(input => {
       input.addEventListener('change', () => {
         const val = parseInt(input.value);
         if (isNaN(val) || val < 1) input.value = 1;
       });
     });
+    
     document.querySelectorAll('.add-to-cart').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = Number(btn.dataset.id);
@@ -579,9 +761,11 @@
     });
   }
 
+  // Cart functions
   function addToCart(productId, qty = 1) {
     const item = products.find(p => p.id === productId);
     if (!item) return;
+    
     const existing = cart.find(i => i.id === productId);
     if (existing) {
       existing.qty += qty;
@@ -589,82 +773,120 @@
       cart.push({ ...item, qty: qty });
     }
     saveCart();
-    updateCartView();
+    updateCartUI();
   }
 
-  function updateCartView() {
+  function removeFromCart(productId) {
+    cart = cart.filter(i => i.id !== productId);
+    saveCart();
+    updateCartUI();
+  }
+
+  function updateCartItemQty(productId, qty) {
+    const item = cart.find(i => i.id === productId);
+    if (item) {
+      if (qty <= 0) {
+        removeFromCart(productId);
+      } else {
+        item.qty = qty;
+        saveCart();
+        updateCartUI();
+      }
+    }
+  }
+
+  function saveCart() {
+    localStorage.setItem('cart', JSON.stringify(cart));
+  }
+
+  function updateCartUI() {
+    // Update cart count
+    const totalCount = cart.reduce((sum, item) => sum + item.qty, 0);
+    cartCount.textContent = totalCount;
+    checkoutBtn.disabled = totalCount === 0;
+    
+    // Update cart items
     if (cart.length === 0) {
-      cartItemsEl.innerHTML = '<div class="empty-cart">Корзина пуста</div>';
+      cartItems.innerHTML = '<div class="empty-state" style="margin: 40px 0;"><i class="fas fa-shopping-cart"></i><p>Корзина пуста</p></div>';
+      cartTotal.textContent = '0 ₽';
       return;
     }
-    cartItemsEl.innerHTML = '';
+    
+    cartItems.innerHTML = '';
+    let total = 0;
+    
     cart.forEach(item => {
+      const itemTotal = getPrice(item);
+      total += itemTotal;
+      
       const el = document.createElement('div');
       el.className = 'cart-item';
       el.innerHTML = `
+        <img src="${item.img || 'https://placehold.co/60/111111/ffffff?text='}" alt="${item.name}" class="cart-item-img">
         <div class="cart-item-info">
           <div class="cart-item-name">${item.name}</div>
-          <div class="cart-item-qty">
+          <div class="cart-item-price">${getBasePrice(item)} ₽</div>
+          <div class="cart-qty-controls">
             <button class="cart-qty-btn minus" data-id="${item.id}">−</button>
             <input type="number" class="cart-qty-input" value="${item.qty}" min="1" data-id="${item.id}">
             <button class="cart-qty-btn plus" data-id="${item.id}">+</button>
           </div>
+          <button class="cart-remove" data-id="${item.id}"><i class="fas fa-trash"></i> Удалить</button>
         </div>
-        <div>${getPrice(item)} ₽</div>
+        <div>${itemTotal} ₽</div>
       `;
-      cartItemsEl.appendChild(el);
+      cartItems.appendChild(el);
     });
-
+    
+    cartTotal.textContent = `${total} ₽`;
+    
+    // Add event listeners for cart
     document.querySelectorAll('.cart-qty-btn.plus').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const id = Number(btn.dataset.id);
         const input = btn.previousElementSibling;
         const val = parseInt(input.value) + 1;
-        input.value = val;
         updateCartItemQty(id, val);
       });
     });
+    
     document.querySelectorAll('.cart-qty-btn.minus').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const id = Number(btn.dataset.id);
         const input = btn.nextElementSibling;
         const val = Math.max(1, parseInt(input.value) - 1);
-        input.value = val;
         updateCartItemQty(id, val);
       });
     });
+    
     document.querySelectorAll('.cart-qty-input').forEach(input => {
       input.addEventListener('change', (e) => {
         e.stopPropagation();
         const id = Number(input.dataset.id);
         const val = parseInt(input.value);
         if (isNaN(val) || val < 1) {
-          input.value = 1;
           updateCartItemQty(id, 1);
         } else {
           updateCartItemQty(id, val);
         }
       });
     });
-  }
-
-  function updateCartItemQty(itemId, qty) {
-    const item = cart.find(i => i.id === itemId);
-    if (item) {
-      item.qty = qty;
-      if (qty <= 0) {
-        cart = cart.filter(i => i.id !== itemId);
-      }
-      saveCart();
-      updateCartView();
-    }
+    
+    document.querySelectorAll('.cart-remove').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = Number(btn.dataset.id);
+        removeFromCart(id);
+      });
+    });
   }
 
   function getPrice(item) {
     const totalSum = cart.reduce((sum, i) => sum + (i.qty * getBasePrice(i)), 0);
     const qty = item.qty;
+    
     if (totalSum >= 100000 && item.price_100k) return item.price_100k * qty;
     if (totalSum >= 50000 && item.price_50k) return item.price_50k * qty;
     if (totalSum >= 30000 && item.price_30k) return item.price_30k * qty;
@@ -677,36 +899,48 @@
     return item.price_5k || item.price_10k || item.price_30k || item.price_50k || item.price_100k || 0;
   }
 
-  function saveCart() {
-    localStorage.setItem('cart', JSON.stringify(cart));
+  // UI Controls
+  function showNotification() {
+    notification.classList.add('show');
+    setTimeout(() => {
+      notification.classList.remove('show');
+    }, 3000);
   }
 
-  cartBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    cartPanel.style.display = cartPanel.style.display === 'block' ? 'none' : 'block';
-  });
+  function openCart() {
+    cartPanel.classList.add('open');
+    overlay.classList.add('visible');
+    document.body.style.overflow = 'hidden';
+  }
 
-  document.addEventListener('click', (e) => {
-    if (!cartPanel.contains(e.target) && e.target !== cartBtn) {
-      cartPanel.style.display = 'none';
-    }
-  });
+  function closeCart() {
+    cartPanel.classList.remove('open');
+    overlay.classList.remove('visible');
+    document.body.style.overflow = '';
+  }
 
-  cartPanel.addEventListener('click', (e) => {
-    e.stopPropagation();
-  });
-
+  // Event listeners
+  cartIconBtn.addEventListener('click', openCart);
+  closeCart.addEventListener('click', closeCart);
+  overlay.addEventListener('click', closeCart);
+  
+  searchInput.addEventListener('input', filterProducts);
+  sortSelect.addEventListener('change', filterProducts);
+  
   checkoutBtn.addEventListener('click', async () => {
-    const tg = telegramInput.value.trim();
-    const addr = sdekInput.value.trim();
+    const tg = telegramUser.value.trim();
+    const addr = sdekAddress.value.trim();
+    
     if (!tg || !addr) {
       alert('Укажите Telegram и адрес СДЭК!');
       return;
     }
+    
     if (cart.length === 0) {
       alert('Корзина пуста!');
       return;
     }
+    
     let message = `🔔 НОВЫЙ ЗАКАЗ\n\n`;
     message += `Telegram: ${tg}\n`;
     message += `СДЭК: ${addr}\n\n`;
@@ -716,22 +950,25 @@
     });
     const total = cart.reduce((sum, item) => sum + getPrice(item), 0);
     message += `\nИтого: ${total} ₽`;
+    
     const botToken = '8385164830:AAFg-G2MVV5sR4OrtOosil60docftF86NDQ';
     const adminId = '660436506';
+    
     try {
       const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ chat_id: adminId, text: message })
       });
+      
       if (res.ok) {
         alert('Заказ отправлен! Проверьте Telegram.');
         cart = [];
         saveCart();
-        updateCartView();
-        telegramInput.value = '';
-        sdekInput.value = '';
-        cartPanel.style.display = 'none';
+        updateCartUI();
+        telegramUser.value = '';
+        sdekAddress.value = '';
+        closeCart();
       } else {
         throw new Error('Ошибка Telegram API');
       }
@@ -741,19 +978,8 @@
     }
   });
 
-  function showNotification() {
-    notification.style.display = 'block';
-    setTimeout(() => {
-      notification.style.display = 'none';
-    }, 2500);
-  }
-
-  (async () => {
-    const success = await fetchProducts();
-    if (success) {
-      renderTabs();
-    }
-  })();
+  // Initialize
+  fetchProducts();
 </script>
 
 </body>
