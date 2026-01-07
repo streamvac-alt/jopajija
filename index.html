@@ -339,12 +339,7 @@
   <div class="logo">TestShop</div>
 </header>
 
-<div class="tabs">
-  <div class="tab active" data-category="liquids">Жидкости</div>
-  <div class="tab" data-category="coils">Испарители</div>
-  <div class="tab" data-category="pods">Под-системы</div>
-  <div class="tab" data-category="disposables">Одноразки</div>
-</div>
+<div class="tabs" id="tabs"></div>
 
 <div class="subcategories" id="subcategories"></div>
 
@@ -370,11 +365,12 @@
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyWcRyTktyTNw6VNnFy2pFThF-uOMCIDM1RuXR5AARJn-Ba2truNqe-5bO7kZD4bk8n/exec';
 
   let products = [];
-  let currentCategory = 'liquids';
+  let categories = [];
+  let currentCategory = '';
   let currentSubcategory = null;
   let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-  const tabs = document.querySelectorAll('.tab');
+  const tabsEl = document.getElementById('tabs');
   const subcategoriesEl = document.getElementById('subcategories');
   const productsEl = document.getElementById('products');
   const cartBtn = document.getElementById('cartBtn');
@@ -385,64 +381,43 @@
   const sdekInput = document.getElementById('sdekAddress');
   const notification = document.getElementById('notification');
 
-  // Загрузка данных — обход CORS через текстовый ответ
   async function fetchProducts() {
     try {
-      // Добавим '?' чтобы избежать кэша и проблем с Google
-      const response = await fetch(APPS_SCRIPT_URL + '?_=' + Date.now(), {
-        method: 'GET',
-        mode: 'no-cors', // но на самом деле Google Apps Script не поддерживает CORS, поэтому...
-      });
-
-      // Так как no-cors не даёт читать body, делаем хак: запрашиваем как текст
-      // Но Google Apps Script ВСЕГДА отдаёт JSON с правильным Content-Type, даже без CORS
-      // Поэтому на практике можно просто ждать ответа
-      const text = await response.text();
-      const data = JSON.parse(text);
-      return data.products || [];
+      const response = await fetch(APPS_SCRIPT_URL + '?_=' + Date.now());
+      const data = await response.json();
+      products = data.products || [];
+      categories = data.categories || [];
+      return true;
     } catch (e) {
       console.error('Ошибка загрузки:', e);
       productsEl.innerHTML = '<div class="error">Не удалось загрузить товары. Проверьте таблицу и развертывание.</div>';
-      return [];
+      return false;
     }
   }
 
-  function renderProducts() {
-    productsEl.innerHTML = '';
-    const filtered = products.filter(item => {
-      if (item.category !== currentCategory) return false;
-      if (currentCategory === 'liquids' && currentSubcategory && item.subcategory !== currentSubcategory) return false;
-      return true;
-    });
-
-    if (filtered.length === 0) {
-      productsEl.innerHTML = '<div class="error">Нет товаров в этой категории</div>';
-      return;
-    }
-
-    filtered.forEach(item => {
-      const card = document.createElement('div');
-      card.className = 'product-card';
-      card.innerHTML = `
-        <img src="${item.img || 'https://placehold.co/150/252525/ffffff?text=No+Image'}" alt="${item.name}" class="product-img">
-        <div class="product-info">
-          <div class="product-name">${item.name}</div>
-          <div class="price-tier">1 шт: ${item.price1} ₽</div>
-          <div class="price-tier">5 шт: ${item.price5} ₽</div>
-          <div class="price-tier">10 шт: ${item.price10} ₽</div>
-          <button class="add-to-cart" data-id="${item.id}">В корзину</button>
-        </div>
-      `;
-      productsEl.appendChild(card);
-    });
-
-    document.querySelectorAll('.add-to-cart').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = Number(btn.dataset.id);
-        addToCart(id);
-        showNotification();
+  function renderTabs() {
+    tabsEl.innerHTML = '';
+    categories.forEach(cat => {
+      const tab = document.createElement('div');
+      tab.className = 'tab';
+      tab.textContent = cat.name;
+      tab.dataset.category = cat.id;
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentCategory = cat.id;
+        renderSubcategories();
+        renderProducts();
       });
+      tabsEl.appendChild(tab);
     });
+
+    if (categories.length > 0) {
+      currentCategory = categories[0].id;
+      document.querySelector('.tab').classList.add('active');
+      renderSubcategories();
+      renderProducts();
+    }
   }
 
   function renderSubcategories() {
@@ -486,15 +461,43 @@
     subcategoriesEl.style.display = 'flex';
   }
 
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      currentCategory = tab.dataset.category;
-      renderSubcategories();
-      renderProducts();
+  function renderProducts() {
+    productsEl.innerHTML = '';
+    const filtered = products.filter(item => {
+      if (item.category !== currentCategory) return false;
+      if (currentCategory === 'liquids' && currentSubcategory && item.subcategory !== currentSubcategory) return false;
+      return true;
     });
-  });
+
+    if (filtered.length === 0) {
+      productsEl.innerHTML = '<div class="error">Нет товаров в этой категории</div>';
+      return;
+    }
+
+    filtered.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'product-card';
+      card.innerHTML = `
+        <img src="${item.img || 'https://placehold.co/150/252525/ffffff?text=No+Image'}" alt="${item.name}" class="product-img">
+        <div class="product-info">
+          <div class="product-name">${item.name}</div>
+          <div class="price-tier">1 шт: ${item.price1} ₽</div>
+          <div class="price-tier">5 шт: ${item.price5} ₽</div>
+          <div class="price-tier">10 шт: ${item.price10} ₽</div>
+          <button class="add-to-cart" data-id="${item.id}">В корзину</button>
+        </div>
+      `;
+      productsEl.appendChild(card);
+    });
+
+    document.querySelectorAll('.add-to-cart').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = Number(btn.dataset.id);
+        addToCart(id);
+        showNotification();
+      });
+    });
+  }
 
   function addToCart(productId) {
     const item = products.find(p => p.id === productId);
@@ -577,7 +580,7 @@
     cartPanel.style.display = cartPanel.style.display === 'block' ? 'none' : 'block';
   });
 
-  checkoutBtn.addEventListener('click', () => {
+  checkoutBtn.addEventListener('click', async () => {
     const tg = telegramInput.value.trim();
     const addr = sdekInput.value.trim();
 
@@ -590,17 +593,47 @@
       return;
     }
 
-    let message = `НОВЫЙ ЗАКАЗ%0A%0A`;
-    message += `Telegram: ${tg}%0A`;
-    message += `СДЭК: ${addr}%0A%0A`;
-    message += `Товары:%0A`;
+    let message = `🔔 НОВЫЙ ЗАКАЗ\n\n`;
+    message += `Telegram: ${tg}\n`;
+    message += `СДЭК: ${addr}\n\n`;
+    message += `Товары:\n`;
     cart.forEach(item => {
-      message += `- ${item.name} ×${item.qty} = ${getPrice(item)} ₽%0A`;
+      message += `- ${item.name} ×${item.qty} = ${getPrice(item)} ₽\n`;
     });
-    message += `%0AИтого: ${cart.reduce((sum, item) => sum + getPrice(item), 0)} ₽`;
+    message += `\nИтого: ${cart.reduce((sum, item) => sum + getPrice(item), 0)} ₽`;
 
-    // Telegram Web App: откроется в том же окне
-    window.location.href = `https://t.me/YodaShopSupportBot?start=${encodeURIComponent(message)}`;
+    // Отправляем сообщение админу через Telegram Bot API
+    const botToken = '8385164830:AAFg-G2MVV5sR4OrtOosil60docftF86NDQ';
+    const adminId = '660436506';
+
+    try {
+      const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: adminId,
+          text: message,
+          parse_mode: 'HTML'
+        })
+      });
+
+      const result = await res.json();
+      if (result.ok) {
+        alert('Заказ успешно отправлен администратору!');
+        cart = [];
+        saveCart();
+        updateCartView();
+        telegramInput.value = '';
+        sdekInput.value = '';
+        cartPanel.style.display = 'none';
+      } else {
+        throw new Error('API error: ' + result.description);
+      }
+    } catch (e) {
+      alert('Ошибка отправки заказа: ' + e.message);
+      console.error(e);
+    }
   });
 
   function showNotification() {
@@ -612,10 +645,10 @@
 
   // Инициализация
   (async () => {
-    products = await fetchProducts();
-    renderSubcategories();
-    renderProducts();
-    updateCartView();
+    const success = await fetchProducts();
+    if (success) {
+      renderTabs();
+    }
   })();
 
   document.addEventListener('click', (e) => {
@@ -624,7 +657,6 @@
     }
   });
 
-  // Поддержка Telegram WebApp (опционально)
   if (window.Telegram && window.Telegram.WebApp) {
     Telegram.WebApp.ready();
     Telegram.WebApp.expand();
