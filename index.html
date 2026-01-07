@@ -52,6 +52,32 @@
       color: transparent;
     }
 
+    .search-container {
+      position: relative;
+      max-width: 400px;
+      margin: 16px auto 0;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px 20px 12px 48px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      color: white;
+      font-size: 16px;
+      outline: none;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 18px;
+    }
+
     .tabs {
       display: flex;
       gap: 14px;
@@ -396,6 +422,10 @@
 
 <header>
   <div class="logo">TestShop</div>
+  <div class="search-container">
+    <i class="search-icon">🔍</i>
+    <input type="text" class="search-input" id="searchInput" placeholder="Поиск по названию...">
+  </div>
 </header>
 
 <div class="tabs" id="tabs"></div>
@@ -438,6 +468,7 @@
   const telegramInput = document.getElementById('telegramUser');
   const sdekInput = document.getElementById('sdekAddress');
   const notification = document.getElementById('notification');
+  const searchInput = document.getElementById('searchInput');
 
   async function fetchProducts() {
     try {
@@ -530,15 +561,26 @@
 
   function renderProducts() {
     productsEl.innerHTML = '';
-    const filtered = products.filter(item => {
+    
+    let filtered = products.filter(item => {
       if (item.category_name !== currentCategory) return false;
       if (currentSubcategory && item.subcategory !== currentSubcategory) return false;
       return true;
     });
+    
+    // Apply search filter
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    if (searchTerm) {
+      filtered = filtered.filter(item => 
+        item.name.toLowerCase().includes(searchTerm)
+      );
+    }
+    
     if (filtered.length === 0) {
-      productsEl.innerHTML = '<div class="error">Нет товаров в этой категории</div>';
+      productsEl.innerHTML = '<div class="error">Товары не найдены</div>';
       return;
     }
+    
     filtered.forEach(item => {
       const card = document.createElement('div');
       card.className = 'product-card';
@@ -711,6 +753,11 @@
 
   cartPanel.addEventListener('click', (e) => {
     e.stopPropagation();
+  });
+
+  // Search functionality
+  searchInput.addEventListener('input', () => {
+    renderProducts();
   });
 
   checkoutBtn.addEventListener('click', async () => {
