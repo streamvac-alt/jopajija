@@ -371,13 +371,6 @@
       padding: 40px 20px;
       color: var(--text-muted);
     }
-
-    /* Иконки */
-    .icon-cart {
-      width: 24px;
-      height: 24px;
-      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' d='M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6.13-10.76l-2.42-4.83c-.23-.46-.69-.74-1.19-.74H6c-.55 0-1 .45-1 1s.45 1 1 1h10.59l1.89 3.78H7c-.55 0-1 .45-1 1s.45 1 1 1h10c.41 0 .76-.26.92-.63l2.19-5.08c.06-.13.09-.27.09-.41 0-.55-.45-1-1-1z'/%3E%3C/svg%3E") center/contain no-repeat;
-    }
   </style>
 </head>
 <body>
@@ -394,9 +387,7 @@
   <div class="loading">Загрузка товаров...</div>
 </div>
 
-<div class="cart-btn" id="cartBtn">
-  <div class="icon-cart"></div>
-</div>
+<div class="cart-btn" id="cartBtn">🛒</div>
 
 <div class="cart-panel" id="cartPanel">
   <div class="cart-title">Ваш заказ</div>
@@ -429,25 +420,6 @@
   const sdekInput = document.getElementById('sdekAddress');
   const notification = document.getElementById('notification');
 
-  // ... остальной код (fetchProducts, renderTabs и т.д.) без изменений ...
-
-  // ЗАМЕНИМ ТОЛЬКО ОБРАБОТЧИК ЗАКРЫТИЯ КОРЗИНЫ
-  document.addEventListener('click', (e) => {
-    // Не закрывать, если клик внутри корзины или по кнопке корзины
-    if (!cartPanel.contains(e.target) && e.target !== cartBtn) {
-      cartPanel.style.display = 'none';
-    }
-  });
-
-  // ... остальной код ...
-
-  // ВСТАВЬТЕ СЮДА ВСЁ ОСТАЛЬНОЕ ИЗ ПРЕДЫДУЩЕГО СКРИПТА (fetchProducts, renderTabs, renderSubcategories, renderProducts, addToCart, updateCartView, getPrice, saveCart, checkoutBtn и т.д.)
-  // Полный скрипт — ниже, в компактной форме для вставки
-
-</script>
-
-<!-- Полный скрипт (вставьте его полностью внутри тега <script> выше) -->
-<script>
   async function fetchProducts() {
     try {
       const response = await fetch(APPS_SCRIPT_URL + '?_=' + Date.now());
@@ -632,8 +604,10 @@
       cartItemsEl.appendChild(el);
     });
 
+    // Переназначаем обработчики после каждого обновления
     document.querySelectorAll('.cart-qty-btn.plus').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const id = Number(btn.dataset.id);
         const input = btn.previousElementSibling;
         const val = parseInt(input.value) + 1;
@@ -642,7 +616,8 @@
       });
     });
     document.querySelectorAll('.cart-qty-btn.minus').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const id = Number(btn.dataset.id);
         const input = btn.nextElementSibling;
         const val = Math.max(1, parseInt(input.value) - 1);
@@ -651,7 +626,8 @@
       });
     });
     document.querySelectorAll('.cart-qty-input').forEach(input => {
-      input.addEventListener('change', () => {
+      input.addEventListener('change', (e) => {
+        e.stopPropagation();
         const id = Number(input.dataset.id);
         const val = parseInt(input.value);
         if (isNaN(val) || val < 1) {
@@ -695,8 +671,21 @@
     localStorage.setItem('cart', JSON.stringify(cart));
   }
 
-  cartBtn.addEventListener('click', () => {
+  cartBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
     cartPanel.style.display = cartPanel.style.display === 'block' ? 'none' : 'block';
+  });
+
+  // Исправленный обработчик закрытия — клик по кнопке или внутри панели НЕ закрывает
+  document.addEventListener('click', (e) => {
+    if (!cartPanel.contains(e.target) && e.target !== cartBtn) {
+      cartPanel.style.display = 'none';
+    }
+  });
+
+  // Остановка всплытия событий внутри корзины
+  cartPanel.addEventListener('click', (e) => {
+    e.stopPropagation();
   });
 
   checkoutBtn.addEventListener('click', async () => {
