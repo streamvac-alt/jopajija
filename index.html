@@ -17,6 +17,7 @@
       --border: #222;
       --success: #4cd964;
       --danger: #ff4c4c;
+      --warning: #ffc107;
     }
 
     * {
@@ -31,6 +32,7 @@
       color: var(--text);
       min-height: 100vh;
       padding-bottom: 100px;
+      overscroll-behavior: none;
     }
 
     header {
@@ -445,11 +447,127 @@
       color: #ff4c4c;
       font-size: 16px;
     }
+
+    .cart-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--danger);
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .back-button {
+      position: absolute;
+      left: 20px;
+      top: 20px;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 101;
+    }
+
+    .product-detail {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      z-index: 2000;
+      overflow-y: auto;
+    }
+
+    .product-detail-content {
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .detail-img {
+      width: 100%;
+      height: 300px;
+      object-fit: contain;
+      background: #0a0a0a;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .detail-name {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .detail-prices {
+      margin: 15px 0;
+    }
+
+    .detail-price {
+      margin: 8px 0;
+      font-size: 18px;
+    }
+
+    .detail-qty {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .detail-add-to-cart {
+      width: 100%;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 16px;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 17px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .detail-add-to-cart:hover {
+      background: var(--accent-dark);
+    }
+
+    .price-breakdown {
+      margin-top: 20px;
+      padding: 15px;
+      background: #1a1a1a;
+      border-radius: 10px;
+    }
+
+    .breakdown-item {
+      display: flex;
+      justify-content: space-between;
+      margin: 8px 0;
+    }
+
+    .breakdown-total {
+      font-weight: 800;
+      font-size: 20px;
+      color: var(--accent);
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
 
 <header>
+  <button class="back-button" id="backButton" style="display: none;">←</button>
   <div class="logo">TestShop</div>
   <div class="search-container">
     <i class="search-icon">🔍</i>
@@ -465,7 +583,10 @@
   <div class="loading">Загрузка товаров...</div>
 </div>
 
-<div class="cart-btn" id="cartBtn">🛒</div>
+<div class="cart-btn" id="cartBtn">
+  🛒
+  <div class="cart-badge" id="cartBadge" style="display: none;">0</div>
+</div>
 
 <div class="cart-panel" id="cartPanel">
   <div class="cart-title">Ваш заказ</div>
@@ -483,6 +604,25 @@
 
 <div class="notification" id="notification">Товар добавлен!</div>
 
+<div class="product-detail" id="productDetail">
+  <div class="product-detail-content">
+    <img id="detailImg" class="detail-img" src="" alt="">
+    <h1 id="detailName" class="detail-name"></h1>
+    <div class="detail-prices" id="detailPrices"></div>
+    <div class="detail-qty">
+      <button class="qty-btn minus" id="detailMinus">−</button>
+      <input type="number" class="qty-input" id="detailQty" value="1" min="1">
+      <button class="qty-btn plus" id="detailPlus">+</button>
+    </div>
+    <button class="detail-add-to-cart" id="detailAddToCart">Добавить в корзину</button>
+    <div class="price-breakdown" id="priceBreakdown">
+      <div class="breakdown-item"><span>Количество:</span> <span id="breakdownQty">1</span></div>
+      <div class="breakdown-item"><span>Цена за единицу:</span> <span id="breakdownUnitPrice">0 ₽</span></div>
+      <div class="breakdown-item breakdown-total"><span>Итого:</span> <span id="breakdownTotal">0 ₽</span></div>
+    </div>
+  </div>
+</div>
+
 <script>
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx8p7KvP3QiobeQ8rLL7hTQL8_kblh-TiZS841Yo6gi94kHzh2HvG1XCGS5Umw0HuiM/exec';
 
@@ -490,11 +630,13 @@
   let currentCategory = '';
   let currentSubcategory = null;
   let cart = JSON.parse(localStorage.getItem('cart')) || [];
+  let currentProductDetail = null;
 
   const productsEl = document.getElementById('products');
   const tabsEl = document.getElementById('tabs');
   const subcategoriesEl = document.getElementById('subcategories');
   const cartBtn = document.getElementById('cartBtn');
+  const cartBadge = document.getElementById('cartBadge');
   const cartPanel = document.getElementById('cartPanel');
   const cartItemsEl = document.getElementById('cartItems');
   const cartTotalEl = document.getElementById('cartTotal');
@@ -503,6 +645,18 @@
   const sdekInput = document.getElementById('sdekAddress');
   const notification = document.getElementById('notification');
   const searchInput = document.getElementById('searchInput');
+  const backButton = document.getElementById('backButton');
+  const productDetail = document.getElementById('productDetail');
+  const detailImg = document.getElementById('detailImg');
+  const detailName = document.getElementById('detailName');
+  const detailPrices = document.getElementById('detailPrices');
+  const detailQty = document.getElementById('detailQty');
+  const detailMinus = document.getElementById('detailMinus');
+  const detailPlus = document.getElementById('detailPlus');
+  const detailAddToCart = document.getElementById('detailAddToCart');
+  const breakdownQty = document.getElementById('breakdownQty');
+  const breakdownUnitPrice = document.getElementById('breakdownUnitPrice');
+  const breakdownTotal = document.getElementById('breakdownTotal');
 
   async function fetchProducts() {
     try {
@@ -638,31 +792,42 @@
           <button class="add-to-cart" data-id="${item.id}">В корзину</button>
         </div>
       `;
+      card.addEventListener('click', (e) => {
+        if (!e.target.classList.contains('add-to-cart') && 
+            !e.target.classList.contains('qty-btn') && 
+            !e.target.classList.contains('qty-input')) {
+          showProductDetail(item);
+        }
+      });
       productsEl.appendChild(card);
     });
 
     document.querySelectorAll('.qty-btn.plus').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const id = Number(btn.dataset.id);
         const input = btn.previousElementSibling;
         input.value = Math.max(1, parseInt(input.value) + 1);
       });
     });
     document.querySelectorAll('.qty-btn.minus').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const id = Number(btn.dataset.id);
         const input = btn.nextElementSibling;
         input.value = Math.max(1, parseInt(input.value) - 1);
       });
     });
     document.querySelectorAll('.qty-input').forEach(input => {
-      input.addEventListener('change', () => {
+      input.addEventListener('change', (e) => {
+        e.stopPropagation();
         const val = parseInt(input.value);
         if (isNaN(val) || val < 1) input.value = 1;
       });
     });
     document.querySelectorAll('.add-to-cart').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const id = Number(btn.dataset.id);
         const qtyInput = btn.parentElement.querySelector('.qty-input');
         const qty = parseInt(qtyInput.value) || 1;
@@ -670,6 +835,62 @@
         showNotification();
       });
     });
+  }
+
+  function showProductDetail(product) {
+    currentProductDetail = product;
+    detailImg.src = product.img || 'https://placehold.co/150/111111/ffffff?text=No+Image';
+    detailName.textContent = product.name;
+    
+    const prices = [
+      { label: 'От 5.000 ₽', price: product.price_5k },
+      { label: 'От 10.000 ₽', price: product.price_10k },
+      { label: 'От 30.000 ₽', price: product.price_30k },
+      { label: 'От 50.000 ₽', price: product.price_50k },
+      { label: 'От 100.000 ₽', price: product.price_100k }
+    ].filter(p => p.price > 0);
+    
+    detailPrices.innerHTML = '';
+    prices.forEach(price => {
+      const div = document.createElement('div');
+      div.className = 'detail-price';
+      div.textContent = `${price.label}: ${price.price} ₽`;
+      detailPrices.appendChild(div);
+    });
+    
+    detailQty.value = 1;
+    updatePriceBreakdown();
+    
+    productsEl.style.display = 'none';
+    document.querySelector('header').style.display = 'none';
+    tabsEl.style.display = 'none';
+    subcategoriesEl.style.display = 'none';
+    cartBtn.style.display = 'none';
+    backButton.style.display = 'block';
+    productDetail.style.display = 'block';
+  }
+
+  function hideProductDetail() {
+    productDetail.style.display = 'none';
+    productsEl.style.display = 'grid';
+    document.querySelector('header').style.display = 'block';
+    tabsEl.style.display = 'flex';
+    subcategoriesEl.style.display = 'flex';
+    cartBtn.style.display = 'block';
+    backButton.style.display = 'none';
+  }
+
+  function updatePriceBreakdown() {
+    const qty = parseInt(detailQty.value) || 1;
+    const basePrice = currentProductDetail.price_5k || 
+                      currentProductDetail.price_10k || 
+                      currentProductDetail.price_30k || 
+                      currentProductDetail.price_50k || 
+                      currentProductDetail.price_100k || 0;
+    
+    breakdownQty.textContent = qty;
+    breakdownUnitPrice.textContent = `${basePrice} ₽`;
+    breakdownTotal.textContent = `${basePrice * qty} ₽`;
   }
 
   function addToCart(productId, qty = 1) {
@@ -683,12 +904,14 @@
     }
     saveCart();
     updateCartView();
+    updateCartBadge();
   }
 
   function removeFromCart(productId) {
     cart = cart.filter(item => item.id !== productId);
     saveCart();
     updateCartView();
+    updateCartBadge();
   }
 
   function updateCartItemQty(productId, qty) {
@@ -704,8 +927,19 @@
     }
   }
 
+  function updateCartBadge() {
+    const count = cart.reduce((sum, item) => sum + item.qty, 0);
+    if (count > 0) {
+      cartBadge.textContent = count;
+      cartBadge.style.display = 'block';
+    } else {
+      cartBadge.style.display = 'none';
+    }
+  }
+
   function saveCart() {
     localStorage.setItem('cart', JSON.stringify(cart));
+    updateCartBadge();
   }
 
   function updateCartView() {
@@ -866,6 +1100,35 @@
     }
   });
 
+  detailMinus.addEventListener('click', () => {
+    const val = parseInt(detailQty.value) || 1;
+    detailQty.value = Math.max(1, val - 1);
+    updatePriceBreakdown();
+  });
+
+  detailPlus.addEventListener('click', () => {
+    const val = parseInt(detailQty.value) || 1;
+    detailQty.value = val + 1;
+    updatePriceBreakdown();
+  });
+
+  detailQty.addEventListener('change', () => {
+    const val = parseInt(detailQty.value) || 1;
+    if (isNaN(val) || val < 1) {
+      detailQty.value = 1;
+    }
+    updatePriceBreakdown();
+  });
+
+  detailAddToCart.addEventListener('click', () => {
+    const qty = parseInt(detailQty.value) || 1;
+    addToCart(currentProductDetail.id, qty);
+    showNotification();
+    hideProductDetail();
+  });
+
+  backButton.addEventListener('click', hideProductDetail);
+
   function showNotification() {
     notification.style.display = 'block';
     setTimeout(() => {
@@ -873,13 +1136,16 @@
     }, 2500);
   }
 
+  // Initialize
   (async () => {
     const success = await fetchProducts();
     if (!success) {
       productsEl.innerHTML = '<div class="error">Ошибка загрузки. Попробуйте обновить страницу.</div>';
     }
+    updateCartBadge();
   })();
 </script>
 
 </body>
 </html>
+
